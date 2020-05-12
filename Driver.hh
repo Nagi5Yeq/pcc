@@ -5,11 +5,6 @@
 
 #include "Context.hh"
 #include "Location.hh"
-#include "Parser.hh"
-
-#define YY_DECL pcc::Parser::symbol_type yylex(pcc::Driver& driver)
-
-YY_DECL;
 
 namespace pcc {
 class Driver {

@@ -3,11 +3,13 @@
 
 %code requires {
 #include <string>
+#include <memory>
 
 #include "Location.hh"
 
 namespace pcc {
     class Driver;
+    class StringLiteralNode;
 }
 }
 
@@ -17,6 +19,10 @@ namespace pcc {
 
 %code {
 #include "Driver.hh"
+#include "Node.hh"
+
+#define YY_DECL pcc::Parser::symbol_type yylex(pcc::Driver& driver)
+YY_DECL;
 }
 
 %define api.namespace {pcc}
@@ -37,35 +43,37 @@ namespace pcc {
 
 %type <int> INTEGER_LITERAL
 %type <float> REAL_LITERAL
-%type <char*> STRING_LITERAL
 %type <char*> IDENTIFIER
+
+%type <std::shared_ptr<pcc::StringLiteralNode>> STRING_LITERAL
 
 %%
 
 /* ==================[global part]================== */
 
 program
-    : program_decl global_decls function_decls
+    : program_header decls functions
     ;
 
-program_decl
+program_header
     : PROGRAM IDENTIFIER SEMICOLON
     ;
 
-global_decls
-    : var_block
+decls 
+    : decls decl SEMICOLON
+    |
     ;
 
-function_decls
-    : function_decls function_decl
+decl
+    : VAR var_decls SEMICOLON
+    ;
+
+functions
+    : functions function SEMICOLON
     |
     ;
 
 /* ==================[var part]================== */
-
-var_block
-    : VAR var_decls SEMICOLON
-    ;
 
 var_decls
     : var_decls SEMICOLON var_decl
@@ -73,14 +81,14 @@ var_decls
     ;
 
 var_decl
-    : vars COLON var_type
+    : vars COLON type
     ;
 
 vars
     : vars COMMA IDENTIFIER
     | IDENTIFIER
 
-var_type
+type
     : INTEGER
     | REAL
     | BOOLEAN
@@ -90,47 +98,43 @@ var_type
 
 /* ==================[function part]================== */
 
-function_decl
-    : function_header function_body
+function
+    : function_header decls statement_block
     ;
 
 function_header
-    : FUNCTION IDENTIFIER LPARENTHESIS var_decls RPARENTHESIS COLON var_type SEMICOLON
-    ;
-
-function_body
-    : var_block statement_block SEMICOLON
-    | statement_block SEMICOLON
+    : FUNCTION IDENTIFIER LPARENTHESIS var_decls RPARENTHESIS COLON type SEMICOLON
     ;
 
 /* ==================[statements part]================== */
 
 statements
-    : statements statement SEMICOLON
-    |
+    : statements SEMICOLON statement
+    | statement
     ;
 
 statement
-    : closed_statement
-    | open_statement
+    : open_statement
+    | closed_statement
     ;
 
 open_statement
     : IF expression THEN statement
     | IF expression THEN closed_statement ELSE open_statement
+    | WHILE expression DO open_statement
     ;
 
 closed_statement
     : normal_statement
     | IF expression THEN closed_statement ELSE closed_statement
+    | WHILE expression DO closed_statement
     ;
 
 normal_statement
     : statement_block
     | empty_statement
     | assign_statement
-    | while_statement
-    | expression_statement
+    | expression
     ;
 
 statement_block
@@ -143,14 +147,6 @@ empty_statement
 
 assign_statement
     : lvalue ASSIGN expression
-    ;
-
-while_statement
-    : WHILE expression DO statement
-    ;
-
-expression_statement
-    : function_call
     ;
 
 /* ==================[expression part]================== */

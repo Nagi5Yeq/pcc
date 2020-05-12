@@ -7,13 +7,12 @@
 
 #include "Log.hh"
 #include "Driver.hh"
-#include "Location.hh"
+#include "Lexer.hh"
 
 using pcc::Parser;
 using pcc::Location;
 
 namespace pcc {
-    class Lexer;
     char ToLower(char c){
         return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
@@ -175,7 +174,7 @@ white           [\t\f\r ]
         }
     }
     *p++='\0';
-    return Parser::make_STRING_LITERAL(str, loc);
+    return pcc::Lexer::make_STRING_LITERAL(str, driver, loc);
 }
 
 {identifier} {
@@ -196,17 +195,14 @@ white           [\t\f\r ]
 %%
 
 namespace pcc {
-    int Driver::StartLexer(std::string &filename)
-    {
-        yyin=std::fopen(filename.c_str(),"r");
-        if(yyin==NULL){
-            Log(PCC_ERROR, "Failed to open file %s", filename.c_str());
-            return -1;
-        }
-        return 0;
+int Driver::StartLexer(std::string& filename) {
+    yyin = std::fopen(filename.c_str(), "r");
+    if (yyin == NULL) {
+        Log(PCC_ERROR, "Failed to open file %s", filename.c_str());
+        return -1;
     }
-
-    void Driver::StopLexer(){
-        std::fclose(yyin);
-    }
+    return 0;
 }
+
+void Driver::StopLexer() { std::fclose(yyin); }
+} // namespace pcc

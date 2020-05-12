@@ -1,4 +1,4 @@
-#include "LiteralNode.hh"
+#include "Node.hh"
 
 namespace pcc {
 StringLiteralNode::StringLiteralNode(Driver* driver, char* value)
