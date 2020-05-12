@@ -1,2 +1,8 @@
 build
 .vscode
+.vs
+CMakeSettings.json
+out
+Parser.cc
+Lexer.cc
+Parser.hh

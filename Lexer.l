@@ -7,8 +7,10 @@
 
 #include "Log.hh"
 #include "Driver.hh"
+#include "Location.hh"
 
-using token=pcc::Parser::token;
+using pcc::Parser;
+using pcc::Location;
 
 namespace pcc {
     class Lexer;
@@ -23,7 +25,7 @@ namespace pcc {
 %option never-interactive
 %option nounistd
 %option case-insensitive
-%option noyywrap nounput noinput
+%option noyywrap nounput noinput batch debug
 
 decimal         ([1-9][0-9]*)|0
 octal           0[0-7]*
@@ -45,66 +47,75 @@ string          '({char}|{escaped_char}|{hex_char}|{oct_char}|\\')*'
 
 identifier      [a-z][0-9a-z]*
 
-white           [\t\f\n\r ]
+white           [\t\f\r ]
+
+%{
+#define YY_USER_ACTION loc.columns(yyleng);
+%}
 
 %%
 
-":="        {return token::ASSIGN;}
-":"         {return token::COLON;}
-";"         {return token::SEMICOLON;}
-"."         {return token::DOT;}
-"["         {return token::LBRACKET;}
-"]"         {return token::RBRACKET;}
-"("         {return token::LPARENTHESIS;}
-")"         {return token::RPARENTHESIS;}
+%{
+  Location& loc = driver.location_;
+  loc.step();
+%}
 
-"+"         {return token::ADD;}
-"-"         {return token::SUB;}
-"*"         {return token::MUL;}
-"/"         {return token::REAL_DIV;}
-"div"       {return token::DIV;}
-"mod"       {return token::MOD;}
-"**"        {return token::EXP;}
+":="        {return Parser::make_ASSIGN(loc);}
+":"         {return Parser::make_COLON(loc);}
+";"         {return Parser::make_SEMICOLON(loc);}
+"."         {return Parser::make_DOT(loc);}
+"["         {return Parser::make_LBRACKET(loc);}
+"]"         {return Parser::make_RBRACKET(loc);}
+"("         {return Parser::make_LPARENTHESIS(loc);}
+")"         {return Parser::make_RPARENTHESIS(loc);}
 
-"and"       {return token::AND;}
-"not"       {return token::NOT;}
-"or"        {return token::OR;}
-"xor"       {return token::XOR;}
+"+"         {return Parser::make_ADD(loc);}
+"-"         {return Parser::make_SUB(loc);}
+"*"         {return Parser::make_MUL(loc);}
+"/"         {return Parser::make_REAL_DIV(loc);}
+"div"       {return Parser::make_DIV(loc);}
+"mod"       {return Parser::make_MOD(loc);}
+"**"        {return Parser::make_EXP(loc);}
 
-"<"         {return token::LT;}
-"<="        {return token::LE;}
-">"         {return token::GT;}
-">="        {return token::GE;}
-"="         {return token::EQ;}
-"<>"        {return token::NE;}
+"and"       {return Parser::make_AND(loc);}
+"not"       {return Parser::make_NOT(loc);}
+"or"        {return Parser::make_OR(loc);}
+"xor"       {return Parser::make_XOR(loc);}
 
-"begin"     {return token::BEGINS;}
-"end"       {return token::ENDS;}
-"program"   {return token::PROGRAM;}
-"function"  {return token::FUNCTION;}
-"const"     {return token::CONST;}
-"var"       {return token::VAR;}
-"if"        {return token::IF;}
-"then"      {return token::THEN;}
-"else"      {return token::ELSE;}
-"while"     {return token::WHILE;}
-"do"        {return token::DO;}
-"integer"   {return token::INTEGER;}
-"boolean"   {return token::BOOLEAN;}
-"char"      {return token::CHAR;}
-"real"      {return token::REAL;}
-"string"    {return token::STRING;}
-"true"      {return token::TRUE;}
-"false"     {return token::FALSE;}
+"<"         {return Parser::make_LT(loc);}
+"<="        {return Parser::make_LE(loc);}
+">"         {return Parser::make_GT(loc);}
+">="        {return Parser::make_GE(loc);}
+"="         {return Parser::make_EQ(loc);}
+"<>"        {return Parser::make_NE(loc);}
+
+"begin"     {return Parser::make_BEGINS(loc);}
+"end"       {return Parser::make_ENDS(loc);}
+"program"   {return Parser::make_PROGRAM(loc);}
+"function"  {return Parser::make_FUNCTION(loc);}
+"const"     {return Parser::make_CONST(loc);}
+"var"       {return Parser::make_VAR(loc);}
+"if"        {return Parser::make_IF(loc);}
+"then"      {return Parser::make_THEN(loc);}
+"else"      {return Parser::make_ELSE(loc);}
+"while"     {return Parser::make_WHILE(loc);}
+"do"        {return Parser::make_DO(loc);}
+"integer"   {return Parser::make_INTEGER(loc);}
+"boolean"   {return Parser::make_BOOLEAN(loc);}
+"char"      {return Parser::make_CHAR(loc);}
+"real"      {return Parser::make_REAL(loc);}
+"string"    {return Parser::make_STRING(loc);}
+"true"      {return Parser::make_TRUE(loc);}
+"false"     {return Parser::make_FALSE(loc);}
 
 {integer} {
     int number = std::strtol(yytext, NULL, 0);
-    return pcc::Parser::make_INTEGER_LITERAL(number);
+    return pcc::Parser::make_INTEGER_LITERAL(number, loc);
 }
 
 {real} {
     float number = std::strtof(yytext, NULL);
-    return pcc::Parser::make_REAL_LITERAL(number);
+    return pcc::Parser::make_REAL_LITERAL(number, loc);
 }
 
 {string} {
@@ -164,25 +175,28 @@ white           [\t\f\n\r ]
         }
     }
     *p++='\0';
-    return pcc::Parser::make_STRING_LITERAL(str);
+    return Parser::make_STRING_LITERAL(str, loc);
 }
 
 {identifier} {
     char *name = new char[yyleng];
     std::transform(yytext, yytext+yyleng, name, pcc::ToLower);
-    return pcc::Parser::make_IDENTIFIER(yytext);
+    return Parser::make_IDENTIFIER(yytext, loc);
 }
 
-{white} {}
+{white}+ {loc.step();}
+\n+      {loc.lines(yyleng); loc.step();}
 
 . {
     std::cerr<<"ERROR";
 }
 
+<<EOF>>  {return Parser::make_FILE_END(loc);}
+
 %%
 
 namespace pcc {
-    int Driver::StartLexer(const std::string &filename)
+    int Driver::StartLexer(std::string &filename)
     {
         yyin=std::fopen(filename.c_str(),"r");
         if(yyin==NULL){

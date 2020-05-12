@@ -6,7 +6,8 @@ Driver::Driver(Context* context)
 
 Driver::~Driver() {}
 
-void Driver::Parse(const std::string& filename) {
+void Driver::Parse(std::string& filename) {
+    location_.initialize(&filename);
     if (StartLexer(filename) != 0) {
         return;
     }

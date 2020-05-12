@@ -4,10 +4,14 @@
 %code requires {
 #include <string>
 
+#include "Location.hh"
+
 namespace pcc {
     class Driver;
 }
 }
+
+%locations
 
 %param {pcc::Driver& driver}
 
@@ -17,13 +21,14 @@ namespace pcc {
 
 %define api.namespace {pcc}
 %define api.parser.class {Parser}
+%define api.location.type {pcc::Location}
 %define api.value.type variant
 %define api.token.constructor
 %define parse.error verbose
 %define parse.assert
 
 %token COLON SEMICOLON COMMA DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
-%token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION
+%token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION FILE_END
 %token IF THEN ELSE WHILE DO
 %token INTEGER BOOLEAN CHAR REAL STRING
 %token ADD SUB MUL REAL_DIV DIV MOD EXP LT LE GT GE EQ NE
@@ -239,9 +244,9 @@ literal
 
 namespace pcc {
 
-    void Parser::error (const std::string& m)
+    void Parser::error (const location_type& l, const std::string& m)
     {
-        std::cerr << m << '\n';
+        std::cerr << l << ":" << m << '\n';
     }
 
 }

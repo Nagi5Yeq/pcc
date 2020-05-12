@@ -8,28 +8,27 @@ add_definitions(${LLVM_DEFINITIONS})
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
+set(PCC_SOURCE
+    Context.cc
+    Driver.cc
+    Log.cc
+    main.cc
+    Version.cc)
+
 bison_target(pcc_parser Parser.y ${CMAKE_CURRENT_BINARY_DIR}/Parser.cc)
 flex_target(pcc_lexer Lexer.l ${CMAKE_CURRENT_BINARY_DIR}/Lexer.cc)
 add_flex_bison_dependency(pcc_lexer pcc_parser)
 
 add_definitions(-DPCC_OSNAME="${CMAKE_SYSTEM}")
 
-set(PCC_SOURCE
-    Context.cc
-    Driver.cc
-    Lexer.cc
-    Log.cc
-    main.cc
-    Parser.cc
-    Version.cc)
-
 list(APPEND PCC_SOURCE
     node/BaseNode.cc
     node/LiteralNode.cc)
 
+
 list(APPEND PCC_SOURCE
-    ${BISON_pcc_parser_OUTPUT}
-    ${FLEX_pcc_lexer_OUTPUT})
+    ${BISON_pcc_parser_OUTPUTS}
+    ${FLEX_pcc_lexer_OUTPUTS})
 
 add_executable(pcc ${PCC_SOURCE})
 target_include_directories(pcc PRIVATE

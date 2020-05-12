@@ -4,6 +4,7 @@
 #include <cstdio>
 
 #include "Context.hh"
+#include "Location.hh"
 #include "Parser.hh"
 
 #define YY_DECL pcc::Parser::symbol_type yylex(pcc::Driver& driver)
@@ -15,11 +16,12 @@ class Driver {
   public:
     Driver(Context* context);
     ~Driver();
-    int StartLexer(const std::string& filename);
+    int StartLexer(std::string& filename);
     void StopLexer();
-    void Parse(const std::string& filename);
+    void Parse(std::string& filename);
     llvm::Module* GetModule();
     llvm::IRBuilder<>* GetBuilder();
+    Location location_;
 
     Context* context_;
 };

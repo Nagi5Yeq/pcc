@@ -7,16 +7,16 @@ void Log(LogLevel level, const char* format, ...) {
     if (CurrentLogLevel <= level) {
         switch (level) {
         case PCC_ERROR:
-            fprintf(stderr, "[ERROR] ");
+            std::fprintf(stderr, "[ERROR] ");
             break;
         case PCC_WARNING:
-            fprintf(stderr, "[WARNING] ");
+            std::fprintf(stderr, "[WARNING] ");
             break;
         case PCC_INFO:
-            fprintf(stderr, "[INFO] ");
+            std::fprintf(stderr, "[INFO] ");
             break;
         case PCC_DEBUG:
-            fprintf(stderr, "[DEBUG] ");
+            std::fprintf(stderr, "[DEBUG] ");
             break;
         }
         std::vfprintf(stderr, format, va);

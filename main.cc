@@ -34,7 +34,9 @@ int main(int argc, char* argv[]) {
     for (int i = optind; i < argc; i++) {
         pcc::Context context(argv[i]);
         pcc::Driver driver(&context);
-        driver.Parse(argv[i]);
+        std::string filename(argv[i]);
+        driver.Parse(filename);
     }
+    
     return 0;
 }
