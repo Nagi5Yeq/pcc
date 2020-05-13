@@ -6,10 +6,10 @@
 #include <memory>
 
 #include "Location.hh"
+#include "Node.hh"
 
 namespace pcc {
     class Driver;
-    class StringLiteralNode;
 }
 }
 
@@ -19,7 +19,6 @@ namespace pcc {
 
 %code {
 #include "Driver.hh"
-#include "Node.hh"
 
 #define YY_DECL pcc::Parser::symbol_type yylex(pcc::Driver& driver)
 YY_DECL;
@@ -36,15 +35,15 @@ YY_DECL;
 %token COLON SEMICOLON COMMA DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
 %token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION FILE_END
 %token IF THEN ELSE WHILE DO
-%token INTEGER BOOLEAN CHAR REAL STRING
+%token BOOLEAN CHAR INTEGER REAL STRING
 %token ADD SUB MUL REAL_DIV DIV MOD EXP LT LE GT GE EQ NE
-%token AND NOT OR XOR TRUE FALSE
-%token INTEGER_LITERAL REAL_LITERAL STRING_LITERAL
+%token AND NOT OR XOR
+%token INTEGER_LITERAL REAL_LITERAL STRING_LITERAL BOOLEAN_LITERAL CHAR_LITERAL
 
-%type <int> INTEGER_LITERAL
-%type <float> REAL_LITERAL
-%type <char*> IDENTIFIER
-
+%type <std::string> IDENTIFIER
+%type <std::shared_ptr<pcc::BooleanLiteralNode>> BOOLEAN_LITERAL
+%type <std::shared_ptr<pcc::IntegerLiteralNode>> INTEGER_LITERAL
+%type <std::shared_ptr<pcc::RealLiteralNode>> REAL_LITERAL
 %type <std::shared_ptr<pcc::StringLiteralNode>> STRING_LITERAL
 
 %%
@@ -229,8 +228,7 @@ arguments
     ;
 
 literal
-    : TRUE
-    | FALSE
+    : BOOLEAN_LITERAL
     | INTEGER_LITERAL
     | REAL_LITERAL
     | STRING_LITERAL

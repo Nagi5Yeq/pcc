@@ -6,14 +6,26 @@
 #include "BaseNode.hh"
 
 namespace pcc {
-class StringLiteralNode : public BaseNode {
+template <typename Type, typename Construct = Type>
+class LiteralNode : public BaseNode {
   public:
-    StringLiteralNode(Driver* driver, char* value);
-    Value CodeGen() override;
+    LiteralNode(Driver* driver, Construct value);
+    Value CodeGen() override; // type-specific CodeGen() is in the .cc file.
 
   private:
-    std::string value_;
+    Type value_;
 };
+
+template <typename Type, typename Construct>
+LiteralNode<Type, Construct>::LiteralNode(Driver* driver,
+                                                    Construct value)
+    : BaseNode(driver)
+    , value_(value) {}
+
+using BooleanLiteralNode = LiteralNode<bool>;
+using IntegerLiteralNode = LiteralNode<int>;
+using RealLiteralNode = LiteralNode<float>;
+using StringLiteralNode = LiteralNode<std::string, char*>;
 } // namespace pcc
 
 #endif

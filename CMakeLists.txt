@@ -36,5 +36,5 @@ target_include_directories(pcc PRIVATE
     ${CMAKE_SOURCE_DIR}/node
     ${CMAKE_CURRENT_BINARY_DIR})
 
-llvm_map_components_to_libnames(llvm_libs support core irreader all)
+llvm_map_components_to_libnames(llvm_libs support core)
 target_link_libraries(pcc ${llvm_libs})

@@ -37,12 +37,12 @@ real_noexp      [0-9]*\.[0-9]*
 
 real            [+-]?({real_exp}|{real_noexp})
 
-char            [0-9a-zA-Z_{}[\]#()<>%:;.?*+\-/^&|~!=,\\" \t\n\v\f]
+trival_char     [0-9a-zA-Z_{}[\]#()<>%:;.?*+\-/^&|~!=,\\" \t\n\v\f]
 escaped_char    \\[\'?\\abfnrtv]
 hex_char        \\x[0-9a-fA-F]{1,2}
 oct_char        \\[0-7]{1,3}
 
-string          '({char}|{escaped_char}|{hex_char}|{oct_char}|\\')*'
+string          '({trival_char}|{escaped_char}|{hex_char}|{oct_char}|\\')*'
 
 identifier      [a-z][0-9a-z]*
 
@@ -104,77 +104,30 @@ white           [\t\f\r ]
 "char"      {return Parser::make_CHAR(loc);}
 "real"      {return Parser::make_REAL(loc);}
 "string"    {return Parser::make_STRING(loc);}
-"true"      {return Parser::make_TRUE(loc);}
-"false"     {return Parser::make_FALSE(loc);}
+
+"true"      {return pcc::Lexer::make_BOOLEAN_LITERAL(true, driver, loc);}
+"false"     {return pcc::Lexer::make_BOOLEAN_LITERAL(false, driver, loc);}
 
 {integer} {
     int number = std::strtol(yytext, NULL, 0);
-    return pcc::Parser::make_INTEGER_LITERAL(number, loc);
+    return pcc::Lexer::make_INTEGER_LITERAL(number, driver, loc);
 }
 
 {real} {
     float number = std::strtof(yytext, NULL);
-    return pcc::Parser::make_REAL_LITERAL(number, loc);
+    return pcc::Lexer::make_REAL_LITERAL(number, driver, loc);
 }
 
 {string} {
-    static std::map<char,char> escape_map={
-        {'\'','\''},
-        {'?','\?'},
-        {'\\','\\'},
-        {'a','\a'},
-        {'b','\b'},
-        {'f','\f'},
-        {'n','\n'},
-        {'r','\r'},
-        {'t','\t'},
-        {'v','\v'}
-    };
-    char *str = new char[yyleng];
-    char *p = str;
-    int i = 1;
-    while(i<yyleng-1){
-        if(yytext[i]!='\\'){
-            *p++=yytext[i];
-            i++;
-        }
-        else if(yytext[i+1]=='x'){
-            char c[3], *cend;
-            c[0]=yytext[i+2];
-            if(i+3<yyleng-1){
-                c[1]=yytext[i+3];
-                c[2]='\0';
-            } else {
-                c[1]='\0';
-            }
-            *p++=(char)std::strtol(c,&cend,16);
-            i+=(int)(cend-c)+2;
-        }
-        else if(yytext[i+1]>='0' && yytext[i+1]<='7'){
-            char c[4], *cend;
-            c[0]=yytext[i+1];
-            if(i+3<yyleng-1){
-                c[1]=yytext[i+2];
-                c[2]=yytext[i+3];
-                c[3]='\0';
-            }
-            else if(i+3<yyleng){
-                c[1]=yytext[i+2];
-                c[2]='\0';
-            }
-            else {
-                c[1]='\0';
-            }
-            *p++=(char)std::strtol(c,&cend,8);
-            i+=(int)(cend-c)+1;
-        }
-        else {
-            *p++=escape_map[yytext[i+1]];
-            i+=2;
-        }
+    char *s, *end, *p;
+    s = p = yytext + 1;
+    end = s + yyleng - 2;
+    while (s < end) {
+        s = pcc::Lexer::GetUnescapedChar(s, end, p);
+        p++;
     }
-    *p++='\0';
-    return pcc::Lexer::make_STRING_LITERAL(str, driver, loc);
+    *p = '\0';
+    return pcc::Lexer::make_STRING_LITERAL(yytext + 1, driver, loc);
 }
 
 {identifier} {
