@@ -74,7 +74,6 @@ white           [\t\f\r ]
 "/"         {return Parser::make_REAL_DIV(loc);}
 "div"       {return Parser::make_DIV(loc);}
 "mod"       {return Parser::make_MOD(loc);}
-"**"        {return Parser::make_EXP(loc);}
 
 "and"       {return Parser::make_AND(loc);}
 "not"       {return Parser::make_NOT(loc);}
@@ -105,17 +104,17 @@ white           [\t\f\r ]
 "real"      {return Parser::make_REAL(loc);}
 "string"    {return Parser::make_STRING(loc);}
 
-"true"      {return pcc::Lexer::make_BOOLEAN_LITERAL(true, driver, loc);}
-"false"     {return pcc::Lexer::make_BOOLEAN_LITERAL(false, driver, loc);}
+"true"      {return pcc::Lexer::make_BOOLEAN_LITERAL(true, context, loc);}
+"false"     {return pcc::Lexer::make_BOOLEAN_LITERAL(false, context, loc);}
 
 {integer} {
     int number = std::strtol(yytext, NULL, 0);
-    return pcc::Lexer::make_INTEGER_LITERAL(number, driver, loc);
+    return pcc::Lexer::make_INTEGER_LITERAL(number, context, loc);
 }
 
 {real} {
     float number = std::strtof(yytext, NULL);
-    return pcc::Lexer::make_REAL_LITERAL(number, driver, loc);
+    return pcc::Lexer::make_REAL_LITERAL(number, context, loc);
 }
 
 {string} {
@@ -127,7 +126,7 @@ white           [\t\f\r ]
         p++;
     }
     *p = '\0';
-    return pcc::Lexer::make_STRING_LITERAL(yytext + 1, driver, loc);
+    return pcc::Lexer::make_STRING_LITERAL(yytext + 1, context, loc);
 }
 
 {identifier} {

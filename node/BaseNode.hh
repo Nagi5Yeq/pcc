@@ -3,17 +3,16 @@
 
 #include <llvm/IR/Value.h>
 
-namespace pcc {
-using Value = llvm::Value*;
-class Driver;
+#include "Context.hh"
 
+namespace pcc {
 class BaseNode {
   public:
     virtual Value CodeGen() = 0;
-    BaseNode(Driver* driver);
+    BaseNode(Context* context);
 
   protected:
-    Driver* driver_;
+    Context* context_;
 };
 } // namespace pcc
 

@@ -9,7 +9,7 @@ namespace pcc {
 template <typename Type, typename Construct = Type>
 class LiteralNode : public BaseNode {
   public:
-    LiteralNode(Driver* driver, Construct value);
+    LiteralNode(Context* context, Construct value);
     Value CodeGen() override; // type-specific CodeGen() is in the .cc file.
 
   private:
@@ -17,9 +17,8 @@ class LiteralNode : public BaseNode {
 };
 
 template <typename Type, typename Construct>
-LiteralNode<Type, Construct>::LiteralNode(Driver* driver,
-                                                    Construct value)
-    : BaseNode(driver)
+LiteralNode<Type, Construct>::LiteralNode(Context* context, Construct value)
+    : BaseNode(context)
     , value_(value) {}
 
 using BooleanLiteralNode = LiteralNode<bool>;

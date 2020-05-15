@@ -5,15 +5,16 @@
 #include <llvm/IR/Module.h>
 
 namespace pcc {
-class Driver;
+using Value = llvm::Value*;
 class Context {
   public:
     Context(const char* name);
+    llvm::Module* GetModule();
+    llvm::IRBuilder<>* GetBuilder();
 
   private:
     llvm::IRBuilder<> builder_;
     llvm::Module module_;
-    friend class Driver;
 };
 
 extern llvm::LLVMContext GlobalContext;

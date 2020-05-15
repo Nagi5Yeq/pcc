@@ -6,7 +6,8 @@
 #include "Node.hh"
 #include "Parser.hh"
 
-#define YY_DECL pcc::Parser::symbol_type yylex(pcc::Driver& driver)
+#define YY_DECL                                                                \
+    pcc::Parser::symbol_type yylex(pcc::Driver& driver, pcc::Context* context)
 
 YY_DECL;
 
@@ -51,28 +52,28 @@ char* GetUnescapedChar(char* s, char* end, char* out) {
     }
 }
 
-Parser::symbol_type make_BOOLEAN_LITERAL(bool b, pcc::Driver& driver,
+Parser::symbol_type make_BOOLEAN_LITERAL(bool b, pcc::Context* context,
                                          const Parser::location_type& loc) {
     return Parser::make_BOOLEAN_LITERAL(
-        std::make_shared<BooleanLiteralNode>(&driver, b), loc);
+        std::make_shared<BooleanLiteralNode>(context, b), loc);
 }
 
-Parser::symbol_type make_INTEGER_LITERAL(int v, pcc::Driver& driver,
+Parser::symbol_type make_INTEGER_LITERAL(int v, pcc::Context* context,
                                          const Parser::location_type& loc) {
     return Parser::make_INTEGER_LITERAL(
-        std::make_shared<IntegerLiteralNode>(&driver, v), loc);
+        std::make_shared<IntegerLiteralNode>(context, v), loc);
 }
 
-Parser::symbol_type make_REAL_LITERAL(float v, pcc::Driver& driver,
+Parser::symbol_type make_REAL_LITERAL(float v, pcc::Context* context,
                                       const Parser::location_type& loc) {
     return Parser::make_REAL_LITERAL(
-        std::make_shared<RealLiteralNode>(&driver, v), loc);
+        std::make_shared<RealLiteralNode>(context, v), loc);
 }
 
-Parser::symbol_type make_STRING_LITERAL(char* s, pcc::Driver& driver,
+Parser::symbol_type make_STRING_LITERAL(char* s, pcc::Context* context,
                                         const Parser::location_type& loc) {
     return Parser::make_STRING_LITERAL(
-        std::make_shared<StringLiteralNode>(&driver, s), loc);
+        std::make_shared<StringLiteralNode>(context, s), loc);
 }
 } // namespace Lexer
 } // namespace pcc

@@ -2,8 +2,8 @@
 #include "Parser.hh"
 
 namespace pcc {
-Driver::Driver(Context* context)
-    : context_(context) {}
+Driver::Driver(const char* name)
+    : context_(name) {}
 
 Driver::~Driver() {}
 
@@ -12,12 +12,8 @@ void Driver::Parse(std::string& filename) {
     if (StartLexer(filename) != 0) {
         return;
     }
-    Parser parser(*this);
+    Parser parser(*this, &context_);
     parser.parse();
     StopLexer();
 }
-
-llvm::Module* Driver::GetModule() { return &context_->module_; }
-
-llvm::IRBuilder<>* Driver::GetBuilder() { return &context_->builder_; }
 } // namespace pcc

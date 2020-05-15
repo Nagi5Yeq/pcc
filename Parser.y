@@ -7,8 +7,9 @@
 
 #include "Location.hh"
 #include "Node.hh"
+#include "Context.hh"
 
-namespace pcc {
+namespace pcc{
     class Driver;
 }
 }
@@ -16,11 +17,12 @@ namespace pcc {
 %locations
 
 %param {pcc::Driver& driver}
+%param {pcc::Context* context}
 
-%code {
-#include "Driver.hh"
+%code{
+#define YY_DECL                                                                \
+    pcc::Parser::symbol_type yylex(pcc::Driver& driver, pcc::Context* context)
 
-#define YY_DECL pcc::Parser::symbol_type yylex(pcc::Driver& driver)
 YY_DECL;
 }
 
@@ -36,7 +38,7 @@ YY_DECL;
 %token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION FILE_END
 %token IF THEN ELSE WHILE DO
 %token BOOLEAN CHAR INTEGER REAL STRING
-%token ADD SUB MUL REAL_DIV DIV MOD EXP LT LE GT GE EQ NE
+%token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE
 %token AND NOT OR XOR
 %token INTEGER_LITERAL REAL_LITERAL STRING_LITERAL BOOLEAN_LITERAL CHAR_LITERAL
 
@@ -166,15 +168,11 @@ l2_expression
     ;
 
 l3_expression
-    : l3_expression l4_operator l4_expression
-    | l4_expression
-
-l4_expression
     : lvalue
     | function_call
     | literal
     | LPARENTHESIS expression RPARENTHESIS
-    | l5_operator l4_expression
+    | l4_operator l3_expression
     ;
 
 l1_operator
@@ -202,10 +200,6 @@ l3_operator
     ;
 
 l4_operator
-    : EXP
-    ;
-
-l5_operator
     : NOT
     | ADD
     | SUB

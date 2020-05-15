@@ -6,7 +6,7 @@
 
 namespace pcc {
 template <> Value BooleanLiteralNode::CodeGen() {
-    llvm::LLVMContext& context = driver_->GetModule()->getContext();
+    llvm::LLVMContext& context = context_->GetModule()->getContext();
     if (value_ == true) {
         return llvm::ConstantInt::getTrue(context);
     } else {
@@ -15,19 +15,19 @@ template <> Value BooleanLiteralNode::CodeGen() {
 }
 
 template <> Value IntegerLiteralNode::CodeGen() {
-    llvm::LLVMContext& context = driver_->GetModule()->getContext();
+    llvm::LLVMContext& context = context_->GetModule()->getContext();
     llvm::APInt value(32, (uint64_t) value_, true);
     return llvm::ConstantInt::get(context, value);
 }
 
 template <> Value RealLiteralNode::CodeGen() {
-    llvm::LLVMContext& context = driver_->GetModule()->getContext();
+    llvm::LLVMContext& context = context_->GetModule()->getContext();
     llvm::APFloat value(value_);
     return llvm::ConstantFP::get(context, value);
 }
 
 template <> Value StringLiteralNode::CodeGen() {
-    llvm::Module* module = driver_->GetModule();
+    llvm::Module* module = context_->GetModule();
     llvm::LLVMContext& context = module->getContext();
     llvm::Constant* str = llvm::ConstantDataArray::getString(context, value_);
     llvm::Type* type = str->getType();
