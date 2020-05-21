@@ -3,11 +3,15 @@
 #include "Context.hh"
 
 namespace pcc {
-llvm::LLVMContext GlobalContext;
+// llvm needs a LLVMContext for every thread, but we only have one thread, so we
+// just use this global context.
+llvm::LLVMContext GlobalLLVMContext;
 
 Context::Context(const char* name)
-    : builder_(GlobalContext)
-    , module_(name, GlobalContext) {}
+    : builder_(GlobalLLVMContext)
+    , module_(name, GlobalLLVMContext) {}
+
+TypeManager* Context::GetTypeManager() { return &TypeManager_; }
 
 llvm::Module* Context::GetModule() { return &module_; }
 

@@ -4,27 +4,42 @@
 #include <string>
 
 #include "BaseNode.hh"
+#include "ExprNode.hh"
 
 namespace pcc {
-template <typename Type, typename Construct = Type>
-class LiteralNode : public BaseNode {
+template <typename T> class LiteralNode : public ExprNode {
   public:
-    LiteralNode(Context* context, Construct value);
-    Value CodeGen() override; // type-specific CodeGen() is in the .cc file.
+    LiteralNode(Context* context, std::shared_ptr<Type> type, T value);
+    Value CodeGen() override;
 
   private:
-    Type value_;
+    T value_;
 };
 
-template <typename Type, typename Construct>
-LiteralNode<Type, Construct>::LiteralNode(Context* context, Construct value)
-    : BaseNode(context)
-    , value_(value) {}
+// the implementation of member functions of template classes must be put in
+// header, but we put type-specific CodeGen() in the .cc file.
+template <typename T>
+LiteralNode<T>::LiteralNode(Context* context, std::shared_ptr<Type> type,
+                            T value)
+    : ExprNode(context)
+    , value_(value) {
+    type_ = type;
+}
 
 using BooleanLiteralNode = LiteralNode<bool>;
+using CharLiteralNode = LiteralNode<char>;
 using IntegerLiteralNode = LiteralNode<int>;
 using RealLiteralNode = LiteralNode<float>;
-using StringLiteralNode = LiteralNode<std::string, char*>;
+
+class StringLiteralNode : public ExprNode {
+  public:
+    StringLiteralNode(Context* context, std::shared_ptr<Type> type, char* begin,
+                      char* end);
+    Value CodeGen() override;
+
+  private:
+    std::vector<char> value_;
+};
 } // namespace pcc
 
 #endif

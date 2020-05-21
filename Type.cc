@@ -1,154 +1,172 @@
 #include <llvm/IR/InstrTypes.h>
 
+#include "Context.hh"
 #include "Type.hh"
 
 namespace pcc {
-Type::Type(const char* name, bool IsBasicType, int width)
-    : name_(name)
-    , IsBasicType_(IsBasicType)
-    , width_(width) {}
+const char* GetOperatorName(BinaryOperator op) {
+    static const char* names[ToUnderlying(BinaryOperator::BINARYOP_NUMBER)] = {
+        "+",  "-", "*",  "/",   "%",  "<",   "<=", ">",
+        ">=", "=", "<>", "and", "or", "xor", "[]"};
+    return names[ToUnderlying(op)];
+}
 
-const char* Type::GetCommonName() { return name_; }
+const char* GetOperatorName(UnaryOperator op) {
+    static const char* names[ToUnderlying(UnaryOperator::UNARYOP_NUMEBR)] = {
+        "+", "-", "not"};
+    return names[ToUnderlying(op)];
+}
 
-int Type::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                Context* context) {
+Type::Type(std::string&& name, llvm::Type* LLVMType)
+    : name_(std::move(name))
+    , LLVMType_(LLVMType) {}
+
+const char* Type::GetCommonName() { return name_.c_str(); }
+
+llvm::Type* Type::GetLLVMType() { return LLVMType_; }
+
+Value Type::NotAllowed(Value v, Context* context) { return nullptr; }
+Value Type::NotAllowed(Value v0, Value v1, Context* context) { return nullptr; }
+
+Value Type::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                  Context* context) {
     return NotAllowed(v0, v1, context);
 }
 
-int Type::NotAllowed(Value v0, Value v1, Context* context) { return -1; }
-
-int Type::CreateAdd(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::Add, v0, v1);
-    return 0;
+Value Type::CreateUnaryOperation(UnaryOperator op, Value v, Context* context) {
+    return NotAllowed(v, context);
 }
 
-int Type::CreateSub(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::Sub, v0, v1);
-    return 0;
+Value Type::CreateAdd(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateAdd(v0, v1);
 }
 
-int Type::CreateMul(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::Mul, v0, v1);
-    return 0;
+Value Type::CreateSub(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateSub(v0, v1);
 }
 
-int Type::CreateDiv(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::SDiv, v0, v1);
-    return 0;
+Value Type::CreateMul(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateMul(v0, v1);
 }
 
-int Type::CreateMod(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::SRem, v0, v1);
-    return 0;
+Value Type::CreateDiv(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateSDiv(v0, v1);
 }
 
-int Type::CreateLt(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_SLT, v0, v1);
-    return 0;
+Value Type::CreateMod(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateSRem(v0, v1);
 }
 
-int Type::CreateLe(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_SLE, v0, v1);
-    return 0;
+Value Type::CreateLt(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_SLT, v0, v1);
 }
 
-int Type::CreateGt(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_SGT, v0, v1);
-    return 0;
+Value Type::CreateLe(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_SLE, v0, v1);
 }
 
-int Type::CreateGe(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_SGE, v0, v1);
-    return 0;
+Value Type::CreateGt(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_SGT, v0, v1);
 }
 
-int Type::CreateEq(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_EQ, v0, v1);
-    return 0;
+Value Type::CreateGe(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_SGE, v0, v1);
 }
 
-int Type::CreateNe(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_NE, v0, v1);
-    return 0;
+Value Type::CreateEq(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_EQ, v0, v1);
 }
 
-int Type::CreateAnd(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::And, v0, v1);
-    return 0;
+Value Type::CreateNe(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateICmp(llvm::CmpInst::ICMP_NE, v0, v1);
 }
 
-int Type::CreateOr(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::Or, v0, v1);
-    return 0;
+Value Type::CreateAnd(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateAnd(v0, v1);
 }
 
-int Type::CreateXor(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::Xor, v0, v1);
-    return 0;
+Value Type::CreateOr(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateOr(v0, v1);
 }
 
-int Type::CreateFAdd(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::FAdd, v0, v1);
-    return 0;
+Value Type::CreateXor(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateXor(v0, v1);
 }
 
-int Type::CreateFSub(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::FSub, v0, v1);
-    return 0;
+Value Type::CreatePos(Value v, Context* context) { return v; }
+
+Value Type::CreateNeg(Value v, Context* context) {
+    return context->GetBuilder()->CreateNeg(v);
 }
 
-int Type::CreateFMul(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::FMul, v0, v1);
-    return 0;
+Value Type::CreateNot(Value v, Context* context) {
+    return context->GetBuilder()->CreateNot(v);
 }
 
-int Type::CreateFDiv(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::FDiv, v0, v1);
-    return 0;
+Value Type::CreateFAdd(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateFAdd(v0, v1);
 }
 
-int Type::CreateFMod(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateBinOp(llvm::Instruction::FRem, v0, v1);
-    return 0;
+Value Type::CreateFSub(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateFSub(v0, v1);
 }
 
-int Type::CreateFLt(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_OLT, v0, v1);
-    return 0;
+Value Type::CreateFMul(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateFMul(v0, v1);
 }
 
-int Type::CreateFLe(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_OLE, v0, v1);
-    return 0;
+Value Type::CreateFDiv(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateFDiv(v0, v1);
 }
 
-int Type::CreateFGt(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_OGT, v0, v1);
-    return 0;
+Value Type::CreateFMod(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateFRem(v0, v1);
 }
 
-int Type::CreateFGe(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_OGE, v0, v1);
-    return 0;
+Value Type::CreateFLt(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_OLT, v0, v1);
 }
 
-int Type::CreateFEq(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_OEQ, v0, v1);
-    return 0;
+Value Type::CreateFLe(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_OLE, v0, v1);
 }
 
-int Type::CreateFNe(Value v0, Value v1, Context* context) {
-    context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_ONE, v0, v1);
-    return 0;
+Value Type::CreateFGt(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_OGT, v0, v1);
 }
+
+Value Type::CreateFGe(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_OGE, v0, v1);
+}
+
+Value Type::CreateFEq(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_OEQ, v0, v1);
+}
+
+Value Type::CreateFNe(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateFCmp(llvm::CmpInst::FCMP_ONE, v0, v1);
+}
+
+Value Type::CreateFPos(Value v, Context* context) { return v; }
+
+Value Type::CreateFNeg(Value v, Context* context) {
+    return context->GetBuilder()->CreateFNeg(v);
+}
+
+IntegerBaseType::IntegerBaseType(std::string&& name, int width,
+                                 llvm::Type* LLVMType)
+    : Type(std::move(name), LLVMType)
+    , width_(width) {}
+
+int IntegerBaseType::GetWidth() { return width_; }
 
 BooleanType::BooleanType()
-    : Type("boolean", true, 1) {}
+    : IntegerBaseType("boolean", 1, llvm::Type::getInt1Ty(GlobalLLVMContext)) {}
 
-int BooleanType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                       Context* context) {
-    static int (pcc::BooleanType::*operations[ToUnderlying(
-        BinaryOperator::OPERATOR_NUMBER)])(Value, Value, Context*) = {
+Value BooleanType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                         Context* context) {
+    static Value (pcc::BooleanType::*operations[ToUnderlying(
+        BinaryOperator::BINARYOP_NUMBER)])(Value, Value, Context*) = {
         &BooleanType::NotAllowed, &BooleanType::NotAllowed,
         &BooleanType::NotAllowed, &BooleanType::NotAllowed,
         &BooleanType::NotAllowed, &BooleanType::NotAllowed,
@@ -161,13 +179,21 @@ int BooleanType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
-CharType::CharType()
-    : Type("char", true, 8) {}
+Value BooleanType::CreateUnaryOperation(UnaryOperator op, Value v,
+                                        Context* context) {
+    if (op == UnaryOperator::NOT) {
+        return CreateNot(v, context);
+    }
+    return NotAllowed(v, context);
+}
 
-int CharType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                    Context* context) {
-    static int (pcc::CharType::*operations[ToUnderlying(
-        BinaryOperator::OPERATOR_NUMBER)])(Value, Value, Context*) = {
+CharType::CharType()
+    : IntegerBaseType("char", 8, llvm::Type::getInt8Ty(GlobalLLVMContext)) {}
+
+Value CharType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                      Context* context) {
+    static Value (pcc::CharType::*operations[ToUnderlying(
+        BinaryOperator::BINARYOP_NUMBER)])(Value, Value, Context*) = {
         &CharType::CreateAdd, &CharType::CreateSub, &CharType::CreateMul,
         &CharType::CreateDiv, &CharType::CreateMod, &CharType::CreateLt,
         &CharType::CreateLe,  &CharType::CreateGt,  &CharType::CreateGe,
@@ -176,13 +202,22 @@ int CharType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
-IntegerType::IntegerType()
-    : Type("integer", true, 32) {}
+Value CharType::CreateUnaryOperation(UnaryOperator op, Value v,
+                                     Context* context) {
+    static Value (pcc::CharType::*operations[ToUnderlying(
+        UnaryOperator::UNARYOP_NUMEBR)])(Value, Context*) = {
+        &CharType::CreatePos, &CharType::CreateNeg, &CharType::CreateNot};
+    return (this->*operations[ToUnderlying(op)])(v, context);
+}
 
-int IntegerType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                       Context* context) {
-    static int (pcc::IntegerType::*operations[ToUnderlying(
-        BinaryOperator::OPERATOR_NUMBER)])(Value, Value, Context*) = {
+IntegerType::IntegerType()
+    : IntegerBaseType("integer", 32,
+                      llvm::Type::getInt32Ty(GlobalLLVMContext)) {}
+
+Value IntegerType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                         Context* context) {
+    static Value (pcc::IntegerType::*operations[ToUnderlying(
+        BinaryOperator::BINARYOP_NUMBER)])(Value, Value, Context*) = {
         &IntegerType::CreateAdd, &IntegerType::CreateSub,
         &IntegerType::CreateMul, &IntegerType::CreateDiv,
         &IntegerType::CreateMod, &IntegerType::CreateLt,
@@ -194,13 +229,22 @@ int IntegerType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
-RealType::RealType()
-    : Type("real", true, 32) {}
+Value IntegerType::CreateUnaryOperation(UnaryOperator op, Value v,
+                                        Context* context) {
+    static Value (pcc::IntegerType::*
+                      operations[ToUnderlying(UnaryOperator::UNARYOP_NUMEBR)])(
+        Value, Context*) = {&IntegerType::CreatePos, &IntegerType::CreateNeg,
+                            &IntegerType::CreateNot};
+    return (this->*operations[ToUnderlying(op)])(v, context);
+}
 
-int RealType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                    Context* context) {
-    static int (pcc::RealType::*operations[ToUnderlying(
-        BinaryOperator::OPERATOR_NUMBER)])(Value, Value, Context*) = {
+RealType::RealType()
+    : Type("real", llvm::Type::getFloatTy(GlobalLLVMContext)) {}
+
+Value RealType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                      Context* context) {
+    static Value (pcc::RealType::*operations[ToUnderlying(
+        BinaryOperator::BINARYOP_NUMBER)])(Value, Value, Context*) = {
         &RealType::CreateFAdd, &RealType::CreateFSub, &RealType::CreateFMul,
         &RealType::CreateFDiv, &RealType::CreateFMod, &RealType::CreateFLt,
         &RealType::CreateFLe,  &RealType::CreateFGt,  &RealType::CreateFGe,
@@ -209,4 +253,83 @@ int RealType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
+Value RealType::CreateUnaryOperation(UnaryOperator op, Value v,
+                                     Context* context) {
+    static Value (pcc::RealType::*operations[ToUnderlying(
+        UnaryOperator::UNARYOP_NUMEBR)])(Value, Context*) = {
+        &RealType::CreateFPos, &RealType::CreateFNeg, &RealType::NotAllowed};
+    return (this->*operations[ToUnderlying(op)])(v, context);
+}
+
+ArrayType::ArrayType(std::shared_ptr<Type> ElementType, int ElementNumber,
+                     std::shared_ptr<Type> IndexType, Value start, Value end,
+                     std::string&& name)
+    : Type(std::move(name), llvm::ArrayType::get(ElementType->GetLLVMType(),
+                                                 (uint64_t) ElementNumber))
+    , ElementType_(ElementType)
+    , IndexType_(IndexType)
+    , start_(start)
+    , end_(end) {}
+
+std::shared_ptr<Type> ArrayType::GetElementType() { return ElementType_; }
+std::shared_ptr<Type> ArrayType::GetIndexType() { return IndexType_; }
+
+Value ArrayType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                       Context* context) {
+    if (op != BinaryOperator::ARRAY_ACCESS) {
+        return NotAllowed(v0, v1, context);
+    }
+    return CreateArrayAccess(v0, v1, context);
+}
+
+Value ArrayType::CreateArrayAccess(Value v0, Value v1, Context* context) {
+    Value indices[2] = {
+        llvm::ConstantInt::get(IndexType_->GetLLVMType(), 0, true),
+        IndexType_->CreateBinaryOperation(BinaryOperator::SUB, v1, start_,
+                                          context)};
+    return context->GetBuilder()->CreateInBoundsGEP(LLVMType_, v0, indices);
+}
+
+// we use LLVM i8* type to represent void*
+PointerType::PointerType(std::shared_ptr<Type> ElementType,
+                         std::shared_ptr<Type> DifferenceType,
+                         std::shared_ptr<Type> IndexType, std::string&& name)
+    : Type(std::move(name),
+           llvm::PointerType::get(ElementType->GetLLVMType(), 0))
+    , ElementType_(ElementType)
+    , DifferenceType_(DifferenceType)
+    , IndexType_(IndexType) {}
+
+std::shared_ptr<Type> PointerType::GetElementType() { return ElementType_; }
+std::shared_ptr<Type> PointerType::GetIndexType() { return IndexType_; }
+std::shared_ptr<Type> PointerType::GeDiifferenceType() {
+    return DifferenceType_;
+}
+
+Value PointerType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                         Context* context) {
+    static Value (pcc::PointerType::*operations[ToUnderlying(
+        BinaryOperator::BINARYOP_NUMBER)])(Value, Value, Context*) = {
+        &PointerType::NotAllowed, &PointerType::CreatePointerSub,
+        &PointerType::NotAllowed, &PointerType::NotAllowed,
+        &PointerType::NotAllowed, &PointerType::CreateLt,
+        &PointerType::CreateLe,   &PointerType::CreateGt,
+        &PointerType::CreateGe,   &PointerType::CreateEq,
+        &PointerType::CreateNe,   &PointerType::NotAllowed,
+        &PointerType::NotAllowed, &PointerType::NotAllowed,
+        &PointerType::NotAllowed};
+    return (this->*operations[ToUnderlying(op)])(v0, v1, context);
+}
+
+Value PointerType::CreatePointerSub(Value v0, Value v1, Context* context) {
+    llvm::IRBuilder<>* builder = context->GetBuilder();
+    llvm::Type* ResultLLVMType = DifferenceType_->GetLLVMType();
+    Value ConvertedV0 = builder->CreatePtrToInt(v0, ResultLLVMType);
+    Value ConvertedV1 = builder->CreatePtrToInt(v1, ResultLLVMType);
+    return builder->CreateSub(ConvertedV0, ConvertedV1);
+}
+
+Value PointerType::CreateArrayAccess(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateInBoundsGEP(LLVMType_, v0, v1);
+}
 } // namespace pcc

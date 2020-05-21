@@ -41,8 +41,10 @@ trival_char     [0-9a-zA-Z_{}[\]#()<>%:;.?*+\-/^&|~!=,\\" \t\n\v\f]
 escaped_char    \\[\'?\\abfnrtv]
 hex_char        \\x[0-9a-fA-F]{1,2}
 oct_char        \\[0-7]{1,3}
+char_value      {trival_char}|{escaped_char}|{hex_char}|{oct_char}|\\'
 
-string          '({trival_char}|{escaped_char}|{hex_char}|{oct_char}|\\')*'
+char            '{char_value}'
+string          '{char_value}+'
 
 identifier      [a-z][0-9a-z]*
 
@@ -117,6 +119,14 @@ white           [\t\f\r ]
     return pcc::Lexer::make_REAL_LITERAL(number, context, loc);
 }
 
+{char} {
+    char *s, *end, c;
+    s = yytext + 1;
+    end = s + yyleng - 2;
+    pcc::Lexer::GetUnescapedChar(s, end, &c);
+    return pcc::Lexer::make_CHAR_LITERAL(c, context, loc);
+}
+
 {string} {
     char *s, *end, *p;
     s = p = yytext + 1;
@@ -125,8 +135,8 @@ white           [\t\f\r ]
         s = pcc::Lexer::GetUnescapedChar(s, end, p);
         p++;
     }
-    *p = '\0';
-    return pcc::Lexer::make_STRING_LITERAL(yytext + 1, context, loc);
+    *p++ = '\0';
+    return pcc::Lexer::make_STRING_LITERAL(yytext + 1, p, context, loc);
 }
 
 {identifier} {

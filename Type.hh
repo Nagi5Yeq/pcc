@@ -3,11 +3,15 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
-#include "Context.hh"
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Type.h>
 
 namespace pcc {
+using Value = llvm::Value*;
+class Context;
+
 enum class BinaryOperator {
     ADD,
     SUB,
@@ -24,8 +28,13 @@ enum class BinaryOperator {
     OR,
     XOR,
     ARRAY_ACCESS,
-    OPERATOR_NUMBER
+    BINARYOP_NUMBER
 };
+
+enum class UnaryOperator { POS, NEG, NOT, UNARYOP_NUMEBR };
+
+const char* GetOperatorName(BinaryOperator op);
+const char* GetOperatorName(UnaryOperator op);
 
 template <typename T>
 constexpr std::underlying_type_t<T> ToUnderlying(T value) {
@@ -34,75 +43,137 @@ constexpr std::underlying_type_t<T> ToUnderlying(T value) {
 
 class Type {
   public:
-    Type(const char* name, bool IsBasicType, int width);
+    Type(std::string&& name, llvm::Type* LLVMType);
     virtual const char* GetCommonName();
+    llvm::Type* GetLLVMType();
 
-    // return -1 if the operation is not supported
-    virtual int CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                      Context* context);
+    // return nullptr if the operation is not supported
+    virtual Value CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                        Context* context);
+    virtual Value CreateUnaryOperation(UnaryOperator op, Value v,
+                                       Context* context);
 
   protected:
-    int NotAllowed(Value v0, Value v1, Context* context);
+    Value NotAllowed(Value v0, Value v1, Context* context);
+    Value NotAllowed(Value v, Context* context);
 
-    int CreateAdd(Value v0, Value v1, Context* context);
-    int CreateSub(Value v0, Value v1, Context* context);
-    int CreateMul(Value v0, Value v1, Context* context);
-    int CreateDiv(Value v0, Value v1, Context* context);
-    int CreateMod(Value v0, Value v1, Context* context);
-    int CreateLt(Value v0, Value v1, Context* context);
-    int CreateLe(Value v0, Value v1, Context* context);
-    int CreateGt(Value v0, Value v1, Context* context);
-    int CreateGe(Value v0, Value v1, Context* context);
-    int CreateEq(Value v0, Value v1, Context* context);
-    int CreateNe(Value v0, Value v1, Context* context);
-    int CreateAnd(Value v0, Value v1, Context* context);
-    int CreateOr(Value v0, Value v1, Context* context);
-    int CreateXor(Value v0, Value v1, Context* context);
-    int CreateFAdd(Value v0, Value v1, Context* context);
-    int CreateFSub(Value v0, Value v1, Context* context);
-    int CreateFMul(Value v0, Value v1, Context* context);
-    int CreateFDiv(Value v0, Value v1, Context* context);
-    int CreateFMod(Value v0, Value v1, Context* context);
-    int CreateFLt(Value v0, Value v1, Context* context);
-    int CreateFLe(Value v0, Value v1, Context* context);
-    int CreateFGt(Value v0, Value v1, Context* context);
-    int CreateFGe(Value v0, Value v1, Context* context);
-    int CreateFEq(Value v0, Value v1, Context* context);
-    int CreateFNe(Value v0, Value v1, Context* context);
-    int CreateArrayAccess(Value v0, Value v1, Context* context);
-    const char* name_;
-    bool IsBasicType_;
+    Value CreateAdd(Value v0, Value v1, Context* context);
+    Value CreateSub(Value v0, Value v1, Context* context);
+    Value CreateMul(Value v0, Value v1, Context* context);
+    Value CreateDiv(Value v0, Value v1, Context* context);
+    Value CreateMod(Value v0, Value v1, Context* context);
+    Value CreateLt(Value v0, Value v1, Context* context);
+    Value CreateLe(Value v0, Value v1, Context* context);
+    Value CreateGt(Value v0, Value v1, Context* context);
+    Value CreateGe(Value v0, Value v1, Context* context);
+    Value CreateEq(Value v0, Value v1, Context* context);
+    Value CreateNe(Value v0, Value v1, Context* context);
+    Value CreateAnd(Value v0, Value v1, Context* context);
+    Value CreateOr(Value v0, Value v1, Context* context);
+    Value CreateXor(Value v0, Value v1, Context* context);
+    Value CreatePos(Value v, Context* context);
+    Value CreateNeg(Value v, Context* context);
+    Value CreateNot(Value v, Context* context);
+
+    Value CreateFAdd(Value v0, Value v1, Context* context);
+    Value CreateFSub(Value v0, Value v1, Context* context);
+    Value CreateFMul(Value v0, Value v1, Context* context);
+    Value CreateFDiv(Value v0, Value v1, Context* context);
+    Value CreateFMod(Value v0, Value v1, Context* context);
+    Value CreateFLt(Value v0, Value v1, Context* context);
+    Value CreateFLe(Value v0, Value v1, Context* context);
+    Value CreateFGt(Value v0, Value v1, Context* context);
+    Value CreateFGe(Value v0, Value v1, Context* context);
+    Value CreateFEq(Value v0, Value v1, Context* context);
+    Value CreateFNe(Value v0, Value v1, Context* context);
+    Value CreateFPos(Value v, Context* context);
+    Value CreateFNeg(Value v, Context* context);
+
+    std::string name_;
+    llvm::Type* LLVMType_;
+};
+
+class IntegerBaseType : public Type {
+  public:
+    IntegerBaseType(std::string&& name, int width, llvm::Type* LLVMType);
+    int GetWidth();
+
+  protected:
     int width_;
 };
 
-class BooleanType : public Type {
+class BooleanType : public IntegerBaseType {
   public:
     BooleanType();
-    virtual int CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                      Context* context) override;
+    virtual Value CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                        Context* context) override;
+    virtual Value CreateUnaryOperation(UnaryOperator op, Value v,
+                                       Context* context) override;
 };
 
-class CharType : public Type {
+class CharType : public IntegerBaseType {
   public:
     CharType();
-    virtual int CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                      Context* context) override;
+    virtual Value CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                        Context* context) override;
+    virtual Value CreateUnaryOperation(UnaryOperator op, Value v,
+                                       Context* context) override;
 };
 
-class IntegerType : public Type {
+class IntegerType : public IntegerBaseType {
   public:
     IntegerType();
-    virtual int CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                      Context* context) override;
+    virtual Value CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                        Context* context) override;
+    virtual Value CreateUnaryOperation(UnaryOperator op, Value v,
+                                       Context* context) override;
 };
 
 class RealType : public Type {
   public:
     RealType();
-    virtual int CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                      Context* context) override;
+    virtual Value CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                        Context* context) override;
+    virtual Value CreateUnaryOperation(UnaryOperator op, Value v,
+                                       Context* context) override;
 };
 
+class ArrayType : public Type {
+  public:
+    ArrayType(std::shared_ptr<Type> ElementType, int ElementNumber,
+              std::shared_ptr<Type> IndexType, Value start, Value end,
+              std::string&& name);
+    std::shared_ptr<Type> GetElementType();
+    std::shared_ptr<Type> GetIndexType();
+    virtual Value CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                        Context* context) override;
+
+  protected:
+    Value CreateArrayAccess(Value v0, Value v1, Context* context);
+
+    std::shared_ptr<Type> ElementType_;
+    std::shared_ptr<Type> IndexType_;
+    Value start_, end_;
+};
+
+class PointerType : public Type {
+  public:
+    PointerType(std::shared_ptr<Type> ElementType,
+                std::shared_ptr<Type> DifferenceType,
+                std::shared_ptr<Type> IndexType, std::string&& name);
+    std::shared_ptr<Type> GetElementType();
+    std::shared_ptr<Type> GetIndexType();
+    std::shared_ptr<Type> GeDiifferenceType();
+    virtual Value CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                        Context* context) override;
+
+  protected:
+    Value CreatePointerSub(Value v0, Value v1, Context* context);
+    Value CreateArrayAccess(Value v0, Value v1, Context* context);
+    std::shared_ptr<Type> ElementType_;
+    std::shared_ptr<Type> DifferenceType_;
+    std::shared_ptr<Type> IndexType_;
+};
 } // namespace pcc
 
 #endif // PCC_TYPE_H

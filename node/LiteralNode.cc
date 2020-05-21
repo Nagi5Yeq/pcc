@@ -2,42 +2,49 @@
 #include <llvm/ADT/APInt.h>
 
 #include "Driver.hh"
-#include "Node.hh"
+#include "LiteralNode.hh"
 
 namespace pcc {
 template <> Value BooleanLiteralNode::CodeGen() {
-    llvm::LLVMContext& context = context_->GetModule()->getContext();
     if (value_ == true) {
-        return llvm::ConstantInt::getTrue(context);
+        return llvm::ConstantInt::getTrue(GlobalLLVMContext);
     } else {
-        return llvm::ConstantInt::getFalse(context);
+        return llvm::ConstantInt::getFalse(GlobalLLVMContext);
     }
 }
 
+template <> Value CharLiteralNode::CodeGen() {
+    return llvm::ConstantInt::get(type_->GetLLVMType(), value_, true);
+}
+
 template <> Value IntegerLiteralNode::CodeGen() {
-    llvm::LLVMContext& context = context_->GetModule()->getContext();
-    llvm::APInt value(32, (uint64_t) value_, true);
-    return llvm::ConstantInt::get(context, value);
+    return llvm::ConstantInt::get(type_->GetLLVMType(), value_, true);
 }
 
 template <> Value RealLiteralNode::CodeGen() {
-    llvm::LLVMContext& context = context_->GetModule()->getContext();
     llvm::APFloat value(value_);
-    return llvm::ConstantFP::get(context, value);
+    return llvm::ConstantFP::get(GlobalLLVMContext, value);
 }
 
-template <> Value StringLiteralNode::CodeGen() {
-    llvm::Module* module = context_->GetModule();
-    llvm::LLVMContext& context = module->getContext();
-    llvm::Constant* str = llvm::ConstantDataArray::getString(context, value_);
-    llvm::Type* type = str->getType();
-    llvm::GlobalVariable* var = new llvm::GlobalVariable(
-        *module, type, true, llvm::GlobalVariable::InternalLinkage, str);
-    llvm::Constant* zero =
-        llvm::Constant::getNullValue(llvm::IntegerType::getInt32Ty(context));
-    llvm::Constant* indices[] = {zero, zero};
-    llvm::Constant* ptr =
-        llvm::ConstantExpr::getGetElementPtr(type, var, indices, true);
-    return ptr;
+StringLiteralNode::StringLiteralNode(Context* context,
+                                     std::shared_ptr<Type> type, char* begin,
+                                     char* end)
+    : ExprNode(context)
+    , value_(begin, end) {
+    type_ = type;
+}
+
+Value StringLiteralNode::CodeGen() {
+    llvm::IRBuilder<>* builder = context_->GetBuilder();
+    std::shared_ptr<PointerType> pointer =
+        std::static_pointer_cast<PointerType>(type_);
+    llvm::Constant* ConstantString =
+        llvm::ConstantDataArray::get(GlobalLLVMContext, value_);
+    llvm::Constant* GlobalString = new llvm::GlobalVariable(
+        type_->GetLLVMType(), true, llvm::GlobalValue::PrivateLinkage,
+        ConstantString);
+    Value ZeroIndex =
+        llvm::ConstantInt::get(pointer->GetIndexType()->GetLLVMType(), 0, true);
+    return builder->CreateInBoundsGEP(GlobalString, {ZeroIndex, ZeroIndex});
 }
 } // namespace pcc

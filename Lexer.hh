@@ -55,25 +55,48 @@ char* GetUnescapedChar(char* s, char* end, char* out) {
 Parser::symbol_type make_BOOLEAN_LITERAL(bool b, pcc::Context* context,
                                          const Parser::location_type& loc) {
     return Parser::make_BOOLEAN_LITERAL(
-        std::make_shared<BooleanLiteralNode>(context, b), loc);
+        std::make_shared<BooleanLiteralNode>(
+            context,
+            context->GetTypeManager()->GetBuiltinType(BuiltinType::BOOLEAN), b),
+        loc);
+}
+
+Parser::symbol_type make_CHAR_LITERAL(char c, pcc::Context* context,
+                                      const Parser::location_type& loc) {
+    return Parser::make_CHAR_LITERAL(
+        std::make_shared<CharLiteralNode>(
+            context,
+            context->GetTypeManager()->GetBuiltinType(BuiltinType::CHAR), c),
+        loc);
 }
 
 Parser::symbol_type make_INTEGER_LITERAL(int v, pcc::Context* context,
                                          const Parser::location_type& loc) {
     return Parser::make_INTEGER_LITERAL(
-        std::make_shared<IntegerLiteralNode>(context, v), loc);
+        std::make_shared<IntegerLiteralNode>(
+            context,
+            context->GetTypeManager()->GetBuiltinType(BuiltinType::INTEGER), v),
+        loc);
 }
 
 Parser::symbol_type make_REAL_LITERAL(float v, pcc::Context* context,
                                       const Parser::location_type& loc) {
     return Parser::make_REAL_LITERAL(
-        std::make_shared<RealLiteralNode>(context, v), loc);
+        std::make_shared<RealLiteralNode>(
+            context,
+            context->GetTypeManager()->GetBuiltinType(BuiltinType::REAL), v),
+        loc);
 }
 
-Parser::symbol_type make_STRING_LITERAL(char* s, pcc::Context* context,
+Parser::symbol_type make_STRING_LITERAL(char* begin, char* end,
+                                        pcc::Context* context,
                                         const Parser::location_type& loc) {
     return Parser::make_STRING_LITERAL(
-        std::make_shared<StringLiteralNode>(context, s), loc);
+        std::make_shared<StringLiteralNode>(
+            context,
+            context->GetTypeManager()->GetBuiltinType(BuiltinType::STRING),
+            begin, end),
+        loc);
 }
 } // namespace Lexer
 } // namespace pcc

@@ -44,6 +44,7 @@ YY_DECL;
 
 %type <std::string> IDENTIFIER
 %type <std::shared_ptr<pcc::BooleanLiteralNode>> BOOLEAN_LITERAL
+%type <std::shared_ptr<pcc::CharLiteralNode>> CHAR_LITERAL
 %type <std::shared_ptr<pcc::IntegerLiteralNode>> INTEGER_LITERAL
 %type <std::shared_ptr<pcc::RealLiteralNode>> REAL_LITERAL
 %type <std::shared_ptr<pcc::StringLiteralNode>> STRING_LITERAL

@@ -11,10 +11,12 @@ set(PCC_SOURCE
     Log.cc
     main.cc
     Type.cc
+    TypeManager.cc
     Version.cc)
 
 list(APPEND PCC_SOURCE
     node/BaseNode.cc
+    node/ExprNode.cc
     node/LiteralNode.cc)
 
 set(PCC_INCLUDE
