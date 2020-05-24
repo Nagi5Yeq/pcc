@@ -12,12 +12,16 @@ set(PCC_SOURCE
     main.cc
     Type.cc
     TypeManager.cc
+    VariableList.cc
     Version.cc)
 
 list(APPEND PCC_SOURCE
     node/BaseNode.cc
+    node/DeclNode.cc
     node/ExprNode.cc
-    node/LiteralNode.cc)
+    node/FunctionNode.cc
+    node/LiteralNode.cc
+    node/StatementNode.cc)
 
 set(PCC_INCLUDE
     ${CMAKE_SOURCE_DIR}
