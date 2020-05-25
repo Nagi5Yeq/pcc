@@ -53,17 +53,19 @@ YY_DECL;
 %type <std::shared_ptr<pcc::IntegerLiteralNode>> INTEGER_LITERAL
 %type <std::shared_ptr<pcc::RealLiteralNode>> REAL_LITERAL
 %type <std::shared_ptr<pcc::StringLiteralNode>> STRING_LITERAL
-%type <std::shared_ptr<pcc::ExprNode>> literal 
-
+%type <std::shared_ptr<pcc::ExprNode>> literal lvalue
 %type <std::shared_ptr<pcc::ExprNode>> expression l1_expression l2_expression l3_expression
 %type <pcc::BinaryOperator> l1_operator l2_operator l3_operator
 %type <pcc::UnaryOperator> l4_operator
 
-%type <std::shared_ptr<pcc::StatementListNode>> statements statement_block
-
 %type <std::shared_ptr<pcc::FunctionNode>> function
 %type <std::list<std::shared_ptr<pcc::BaseNode>>> local_decls
 %type <std::shared_ptr<pcc::BaseNode>> local_decl
+
+%type <std::shared_ptr<pcc::StatementListNode>> statements statement_block
+%type <std::shared_ptr<pcc::BaseNode>> statement open_statement closed_statement normal_statement
+%type <std::shared_ptr<pcc::EmptyStatementNode>> empty_statement
+%type <std::shared_ptr<pcc::AssignStatementNode>> assign_statement
 
 %%
 
@@ -119,7 +121,7 @@ type
 
 function
     : FUNCTION IDENTIFIER LPARENTHESIS var_decls RPARENTHESIS COLON type SEMICOLON
-      local_decls statement_block
+      local_decls statement_block   {$$=std::make_shared<pcc::FunctionNode>(ctx, $2, $4, $9, $7, $10);}
     ;
 
 local_decls 
@@ -134,13 +136,13 @@ local_decl
 /* ==================[statements part]================== */
 
 statements
-    : statements SEMICOLON statement
-    | statement
+    : statements SEMICOLON statement    {$$=$1; $$->Append($3);}
+    | statement                         {$$=std::make_shared<pcc::StatementListNode>(ctx); $$->Append($1);}
     ;
 
 statement
-    : open_statement
-    | closed_statement
+    : open_statement                    {$$=$1;}
+    | closed_statement                  {$$=$1;}
     ;
 
 open_statement
@@ -150,28 +152,28 @@ open_statement
     ;
 
 closed_statement
-    : normal_statement
+    : normal_statement                                              {$$=$1;}
     | IF expression THEN closed_statement ELSE closed_statement
     | WHILE expression DO closed_statement
     ;
 
 normal_statement
-    : statement_block
-    | empty_statement
-    | assign_statement
-    | expression
+    : statement_block   {$$=$1;}
+    | empty_statement   {$$=$1;}
+    | assign_statement  {$$=$1;}
+    | expression        {$$=$1;}
     ;
 
 statement_block
-    : BEGINS statements ENDS
+    : BEGINS statements ENDS    {$$=$2;}
     ;
 
 empty_statement
-    :
+    :                           {$$=std::make_shared<pcc::EmptyStatementNode>(ctx);}
     ;
 
 assign_statement
-    : lvalue ASSIGN expression
+    : lvalue ASSIGN expression  {$$=std::make_shared<pcc::AssignStatementNode>(ctx, $1, $3);}
     ;
 
 /* ==================[expression part]================== */
@@ -192,7 +194,7 @@ l2_expression
     ;
 
 l3_expression
-    : lvalue
+    : lvalue                                {$$=std::make_shared<pcc::L2RCastingNode>(ctx, $1);}
     | function_call
     | literal                               {$$=$1;}
     | LPARENTHESIS expression RPARENTHESIS  {$$=$2;}
@@ -229,8 +231,8 @@ l4_operator
     ;
 
 lvalue
-    : IDENTIFIER
-    | IDENTIFIER LBRACKET expression RBRACKET
+    : IDENTIFIER                                {$$=std::make_shared<pcc::IdentifierNode>(ctx, $1);}
+    | IDENTIFIER LBRACKET expression RBRACKET   {$$=std::make_shared<pcc::BinaryExprNode>(ctx, pcc::BinaryOperator::ARRAY_ACCESS, std::make_shared<pcc::IdentifierNode>(ctx, $1), $3);}
     | IDENTIFIER DOT IDENTIFIER
     ;
 

@@ -1,6 +1,7 @@
 #include <llvm/IR/LLVMContext.h>
 
 #include "Context.hh"
+#include "Log.hh"
 
 namespace pcc {
 // llvm needs a LLVMContext for every thread, but we only have one thread, so we
@@ -26,4 +27,18 @@ VariableList* Context::GetCurrentScope() { return scopes_.top(); }
 void Context::PushScope(VariableList* scope) { scopes_.push(scope); }
 
 void Context::PopScope() { scopes_.pop(); }
+
+std::shared_ptr<FunctionType> Context::GetFunctionType(std::string name) {
+    decltype(FuncTypes_)::iterator result = FuncTypes_.find(name);
+    if (result == FuncTypes_.end()) {
+        return nullptr;
+    }
+    return std::get<1>(*result);
+}
+
+void Context::AddFunctionType(std::string name,
+                              std::shared_ptr<FunctionType> type) {
+    FuncTypes_.insert({name, type});
+}
+
 } // namespace pcc

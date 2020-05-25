@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
@@ -173,6 +174,19 @@ class PointerType : public Type {
     std::shared_ptr<Type> ElementType_;
     std::shared_ptr<Type> DifferenceType_;
     std::shared_ptr<Type> IndexType_;
+};
+
+class FunctionType : public Type {
+  public:
+    FunctionType(std::shared_ptr<Type> ReturnType,
+                 std::vector<std::shared_ptr<Type>> ArgTypes,
+                 std::string&& name);
+    std::shared_ptr<Type> GetReturnType();
+    std::vector<std::shared_ptr<Type>> GetArgTypes();
+
+  protected:
+    std::shared_ptr<Type> ReturnType_;
+    std::vector<std::shared_ptr<Type>> ArgTypes_;
 };
 } // namespace pcc
 

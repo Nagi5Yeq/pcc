@@ -2,6 +2,7 @@
 #define PCC_CONTEXT_H
 
 #include <stack>
+#include <unordered_map>
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
@@ -20,6 +21,8 @@ class Context {
     VariableList* GetCurrentScope();
     void PushScope(VariableList* scope);
     void PopScope();
+    std::shared_ptr<FunctionType> GetFunctionType(std::string name);
+    void AddFunctionType(std::string name, std::shared_ptr<FunctionType> type);
 
   private:
     TypeManager TypeManager_;
@@ -27,6 +30,7 @@ class Context {
     std::stack<VariableList*> scopes_;
     llvm::IRBuilder<> builder_;
     llvm::Module module_;
+    std::unordered_map<std::string, std::shared_ptr<FunctionType>> FuncTypes_;
 };
 
 extern llvm::LLVMContext GlobalLLVMContext;

@@ -17,7 +17,7 @@ PCC_NORETURN void ShowVersion() {
            "Configurations:\n"
            "  LLVM Version:   " LLVM_VERSION_STRING "\n"
            "  Host Platform:  " PCC_OSNAME "\n"
-           "  Defaule Target: " LLVM_DEFAULT_TARGET_TRIPLE "\n"
+           "  Default Target: " LLVM_DEFAULT_TARGET_TRIPLE "\n"
            "  Built on:       " __DATE__ " " __TIME__
         << std::endl;
     std::exit(0);

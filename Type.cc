@@ -290,7 +290,6 @@ Value ArrayType::CreateArrayAccess(Value v0, Value v1, Context* context) {
     return context->GetBuilder()->CreateInBoundsGEP(LLVMType_, v0, indices);
 }
 
-// we use LLVM i8* type to represent void*
 PointerType::PointerType(std::shared_ptr<Type> ElementType,
                          std::shared_ptr<Type> DifferenceType,
                          std::shared_ptr<Type> IndexType, std::string&& name)
@@ -331,5 +330,26 @@ Value PointerType::CreatePointerSub(Value v0, Value v1, Context* context) {
 
 Value PointerType::CreateArrayAccess(Value v0, Value v1, Context* context) {
     return context->GetBuilder()->CreateInBoundsGEP(LLVMType_, v0, v1);
+}
+
+FunctionType::FunctionType(std::shared_ptr<Type> ReturnType,
+                           std::vector<std::shared_ptr<Type>> ArgTypes,
+                           std::string&& name)
+    : Type(std::move(name), nullptr)
+    , ReturnType_(ReturnType)
+    , ArgTypes_(ArgTypes) {
+    std::vector<llvm::Type*> params(ArgTypes_.size());
+    std::transform(ArgTypes_.cbegin(), ArgTypes_.cend(), params.begin(),
+                   [](const Declaration& decl) {
+                       return std::get<1>(decl)->GetLLVMType();
+                   });
+    LLVMType_ =
+        llvm::FunctionType::get(ReturnType_->GetLLVMType(), params, false);
+}
+
+std::shared_ptr<Type> FunctionType::GetReturnType() { return ReturnType_; }
+
+std::vector<std::shared_ptr<Type>> FunctionType::GetArgTypes() {
+    return ArgTypes_;
 }
 } // namespace pcc

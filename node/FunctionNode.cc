@@ -31,15 +31,16 @@ FunctionNode::FunctionNode(
 Value FunctionNode::CodeGen() {
     llvm::Module* module = context_->GetModule();
     llvm::IRBuilder<>* builder = context_->GetBuilder();
-    std::vector<llvm::Type*> params(arguments_.size());
+    std::vector<std::shared_ptr<Type>> params(arguments_.size());
     std::transform(arguments_.cbegin(), arguments_.cend(), params.begin(),
-                   [](const Declaration& decl) {
-                       return std::get<1>(decl)->GetLLVMType();
-                   });
-    llvm::Type* type =
-        llvm::FunctionType::get(type_->GetLLVMType(), params, false);
-    llvm::FunctionCallee f = module->getOrInsertFunction(name_, type);
-    llvm::Function* function = llvm::cast<llvm::Function>(f.getCallee());
+                   [](const Declaration& decl) { return std::get<1>(decl); });
+    std::shared_ptr<Type> type =
+        context_->GetTypeManager()->CreateFunctionType(type_, params);
+    context_->AddFunctionType(name_, type);
+    llvm::FunctionType* LLVMType =
+        llvm::cast<llvm::FunctionType>(type->GetLLVMType());
+    llvm::Function* function = llvm::Function::Create(
+        LLVMType, llvm::GlobalValue::ExternalLinkage, name_, *module);
     function->setCallingConv(llvm::CallingConv::C);
     llvm::BasicBlock* block =
         llvm::BasicBlock::Create(GlobalLLVMContext, name_, function);

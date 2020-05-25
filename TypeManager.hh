@@ -26,6 +26,13 @@ class TypeManager {
     Value CreateOperation(UnaryOperator op, std::shared_ptr<Type> type, Value v,
                           Context* context);
 
+    Value CreateCast(std::shared_ptr<Type> DstType,
+                     std::shared_ptr<Type> SrcType, Value v, Context* context);
+
+    std::shared_ptr<FunctionType>
+        CreateFunctionType(std::shared_ptr<Type> ReturnType,
+                           std::vector<std::shared_ptr<Type>> ArgTypes);
+
   private:
     std::vector<std::shared_ptr<Type>> builtins_;
     std::vector<std::shared_ptr<Type>> types_;

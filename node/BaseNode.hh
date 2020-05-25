@@ -1,7 +1,7 @@
 #ifndef PCC_BASENODE_H
 #define PCC_BASENODE_H
 
-#include <vector>
+#include <list>
 
 #include "Context.hh"
 
@@ -19,10 +19,11 @@ template <typename T, class Base = BaseNode> class ListNode : public Base {
   public:
     ListNode(Context* context)
         : Base(context) {}
+    void Append(T child) { childs_.push_back(child); }
     virtual Value CodeGen();
 
   private:
-    std::vector<T> childs_;
+    std::list<T> childs_;
 };
 } // namespace pcc
 

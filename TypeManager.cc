@@ -147,4 +147,51 @@ Value TypeManager::CreateOperation(UnaryOperator op, std::shared_ptr<Type> type,
     }
     return result;
 }
+
+Value TypeManager::CreateCast(std::shared_ptr<Type> DstType,
+                              std::shared_ptr<Type> SrcType, Value v,
+                              Context* context) {
+    if (DstType == SrcType) {
+        return v;
+    }
+    llvm::IRBuilder<>* builder = context->GetBuilder();
+    // we can only cast between integer and real
+    std::shared_ptr<IntegerBaseType> DstIntegerBaseType =
+        std::dynamic_pointer_cast<IntegerBaseType>(DstType);
+    std::shared_ptr<IntegerBaseType> SrcIntegerBaseType =
+        std::dynamic_pointer_cast<IntegerBaseType>(SrcType);
+    std::shared_ptr<RealType> DstRealType =
+        std::dynamic_pointer_cast<RealType>(DstType);
+    std::shared_ptr<RealType> SrcRealType =
+        std::dynamic_pointer_cast<RealType>(SrcType);
+    if (SrcRealType != nullptr && DstIntegerBaseType != nullptr) {
+        return builder->CreateFPToSI(v, DstType->GetLLVMType());
+    } else if (SrcIntegerBaseType != nullptr) {
+        if (DstRealType != nullptr) {
+            return builder->CreateSIToFP(v, DstType->GetLLVMType());
+        } else if (DstIntegerBaseType != nullptr) {
+            return builder->CreateSExtOrTrunc(v, DstType->GetLLVMType());
+        }
+    }
+    Log(LogLevel::PCC_ERROR, "unsupported type casting from %s to %s",
+        SrcType->GetCommonName(), DstType->GetCommonName());
+    return nullptr;
+}
+
+std::shared_ptr<FunctionType> TypeManager::CreateFunctionType(
+    std::shared_ptr<Type> ReturnType,
+    std::vector<std::shared_ptr<Type>> ArgTypes) {
+    decltype(ArgTypes)::const_iterator ArgIt = ArgTypes.cbegin();
+    std::string name = " (*)(";
+    if (!ArgTypes.empty()) {
+        name.append((*ArgIt)->GetCommonName());
+        for (++ArgIt; ArgIt != ArgTypes.cend(); ++ArgIt) {
+            name.append(", ");
+            name.append((*ArgIt)->GetCommonName());
+        }
+    }
+    types_.push_back(std::make_shared<FunctionType>(
+        ReturnType, ArgTypes, ReturnType->GetCommonName() + name + ")"));
+}
+
 } // namespace pcc
