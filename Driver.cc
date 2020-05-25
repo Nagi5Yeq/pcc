@@ -7,13 +7,18 @@ Driver::Driver(const char* name)
 
 Driver::~Driver() {}
 
-void Driver::Parse(std::string& filename) {
+std::shared_ptr<ProgramNode> Driver::Parse(std::string& filename) {
     location_.initialize(&filename);
     if (StartLexer(filename) != 0) {
-        return;
+        return nullptr;
     }
     Parser parser(*this, &context_);
     parser.parse();
     StopLexer();
+    return root_;
 }
+
+void Driver::SetRoot(std::shared_ptr<ProgramNode> root) { root_ = root; }
+
+Context* Driver::GetContext() { return &context_; }
 } // namespace pcc

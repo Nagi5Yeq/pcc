@@ -1,17 +1,9 @@
 program a;
-VAR
-    f : integer;
-    g : real;
-    h : boolean;
-    j : integer;
 
-function test(a:integer;b:string):char;
-var s1:real;
+function test(a:integer;b:char;c:real;):integer;
 begin
-    f:=b;
-    g:=c;
-    if g<=c then
-    h:=ture
-    else
-    h:=false;
+    a:=1;
+    b:='a';
+    c:=3.5;
+    test:=6;
 end;

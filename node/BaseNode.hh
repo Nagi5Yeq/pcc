@@ -25,6 +25,21 @@ template <typename T, class Base = BaseNode> class ListNode : public Base {
   private:
     std::list<T> childs_;
 };
+
+class FunctionNode;
+
+class ProgramNode : public BaseNode {
+  public:
+    ProgramNode(Context* context, const std::string& name,
+                std::list<std::shared_ptr<BaseNode>> GlobalDeclarations,
+                std::list<std::shared_ptr<FunctionNode>> functions);
+    virtual Value CodeGen() override;
+
+  protected:
+    std::string name_;
+    std::list<std::shared_ptr<BaseNode>> GlobalDeclarations_;
+    std::list<std::shared_ptr<FunctionNode>> functions_;
+};
 } // namespace pcc
 
 #endif

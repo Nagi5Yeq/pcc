@@ -2,9 +2,11 @@
 #include <vector>
 
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Verifier.h>
 
 #include "DeclNode.hh"
 #include "FunctionNode.hh"
+#include "Log.hh"
 
 namespace pcc {
 FunctionNode::FunctionNode(
@@ -34,7 +36,7 @@ Value FunctionNode::CodeGen() {
     std::vector<std::shared_ptr<Type>> params(arguments_.size());
     std::transform(arguments_.cbegin(), arguments_.cend(), params.begin(),
                    [](const Declaration& decl) { return std::get<1>(decl); });
-    std::shared_ptr<Type> type =
+    std::shared_ptr<FunctionType> type =
         context_->GetTypeManager()->CreateFunctionType(type_, params);
     context_->AddFunctionType(name_, type);
     llvm::FunctionType* LLVMType =
@@ -46,7 +48,7 @@ Value FunctionNode::CodeGen() {
         llvm::BasicBlock::Create(GlobalLLVMContext, name_, function);
     builder->SetInsertPoint(block);
     // alloc arguments
-    llvm::Function::arg_iterator ArgIt;
+    llvm::Function::arg_iterator ArgIt = function->arg_begin();
     for (auto& arg : arguments_) {
         Value ArgValue = builder->CreateAlloca(std::get<1>(arg)->GetLLVMType());
         builder->CreateStore(ArgIt++, ArgValue);
@@ -64,6 +66,10 @@ Value FunctionNode::CodeGen() {
     body_->CodeGen();
     builder->CreateRet(rv);
     context_->PopScope();
+    std::string msg;
+    llvm::raw_string_ostream MsgStream(msg);
+    llvm::verifyFunction(*function, &MsgStream);
+    Log(LogLevel::PCC_INFO, "%s", msg.c_str());
     return nullptr;
 }
 

@@ -20,6 +20,8 @@ namespace pcc{
 %param {pcc::Context* ctx}
 
 %code{
+#include "Driver.hh"
+
 #define YY_DECL                                                                \
     pcc::Parser::symbol_type yylex(pcc::Driver& driver, pcc::Context* ctx)
 
@@ -42,7 +44,7 @@ YY_DECL;
 %token AND NOT OR XOR
 %token INTEGER_LITERAL REAL_LITERAL STRING_LITERAL BOOLEAN_LITERAL CHAR_LITERAL
 
-%type <std::string> IDENTIFIER
+%type <std::string> IDENTIFIER program_header
 %type <std::shared_ptr<pcc::Type>> type
 %type <std::list<Declaration>> var_decls
 %type <std::pair<std::list<std::string>, std::shared_ptr<pcc::Type>>> var_decl
@@ -54,13 +56,16 @@ YY_DECL;
 %type <std::shared_ptr<pcc::RealLiteralNode>> REAL_LITERAL
 %type <std::shared_ptr<pcc::StringLiteralNode>> STRING_LITERAL
 %type <std::shared_ptr<pcc::ExprNode>> literal lvalue
+%type <std::list<std::shared_ptr<pcc::ExprNode>>> arguments
+%type <std::shared_ptr<pcc::FunctionCallNode>> function_call
 %type <std::shared_ptr<pcc::ExprNode>> expression l1_expression l2_expression l3_expression
 %type <pcc::BinaryOperator> l1_operator l2_operator l3_operator
 %type <pcc::UnaryOperator> l4_operator
 
+%type <std::list<std::shared_ptr<pcc::FunctionNode>>> functions
 %type <std::shared_ptr<pcc::FunctionNode>> function
-%type <std::list<std::shared_ptr<pcc::BaseNode>>> local_decls
-%type <std::shared_ptr<pcc::BaseNode>> local_decl
+%type <std::list<std::shared_ptr<pcc::BaseNode>>> local_decls global_decls
+%type <std::shared_ptr<pcc::BaseNode>> local_decl global_decl
 
 %type <std::shared_ptr<pcc::StatementListNode>> statements statement_block
 %type <std::shared_ptr<pcc::BaseNode>> statement open_statement closed_statement normal_statement
@@ -72,36 +77,36 @@ YY_DECL;
 /* ==================[global part]================== */
 
 program
-    : program_header global_decls functions
+    : program_header global_decls functions FILE_END {driver.SetRoot(std::make_shared<pcc::ProgramNode>(ctx, $1, $2, $3));}
     ;
 
 program_header
-    : PROGRAM IDENTIFIER SEMICOLON
+    : PROGRAM IDENTIFIER SEMICOLON  {$$=$2;}
     ;
 
 global_decls
-    : global_decls global_decl SEMICOLON
-    |
+    : global_decls global_decl  {$$=$1; $$.push_back($2);}
+    |                           {$$=std::list<std::shared_ptr<pcc::BaseNode>>();}
     ;
 
 global_decl
-    : VAR var_decls
+    : VAR var_decls {$$=std::make_shared<pcc::VarDeclNode>(ctx, nullptr, $2);}
     ;
 
 functions
-    : functions function SEMICOLON
-    |
+    : functions function SEMICOLON  {$$=$1; $$.push_back($2);}
+    |                               {$$=std::list<std::shared_ptr<pcc::FunctionNode>>();}
     ;
 
 /* ==================[var part]================== */
 
 var_decls
-    : var_decls SEMICOLON var_decl  {$$=$1; auto NewChilds=std::get<0>($3); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($3)});}}
-    | var_decl                      {auto NewChilds=std::get<0>($1); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($1)});}}
+    : var_decls var_decl    {$$=$1; auto NewChilds=std::get<0>($2); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($2)});}}
+    | var_decl              {auto NewChilds=std::get<0>($1); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($1)});}}
     ;
 
 var_decl
-    : vars COLON type       {$$={$1,$3};}
+    : vars COLON type SEMICOLON {$$={$1,$3};}
     ;
 
 vars
@@ -126,7 +131,7 @@ function
 
 local_decls 
     : local_decls local_decl    {$$=$1; $$.push_back($2);}
-    |
+    |                           {$$=std::list<std::shared_ptr<pcc::BaseNode>>();}
     ;
 
 local_decl
@@ -195,7 +200,7 @@ l2_expression
 
 l3_expression
     : lvalue                                {$$=std::make_shared<pcc::L2RCastingNode>(ctx, $1);}
-    | function_call
+    | function_call                         {$$=$1;}
     | literal                               {$$=$1;}
     | LPARENTHESIS expression RPARENTHESIS  {$$=$2;}
     | l4_operator l3_expression             {$$=std::make_shared<pcc::UnaryExprNode>(ctx,$1,$2);}
@@ -237,17 +242,18 @@ lvalue
     ;
 
 function_call
-    : IDENTIFIER LPARENTHESIS arguments RPARENTHESIS
-    | IDENTIFIER LPARENTHESIS RPARENTHESIS
+    : IDENTIFIER LPARENTHESIS arguments RPARENTHESIS    {$$=std::make_shared<pcc::FunctionCallNode>(ctx, $1, $3);}
+    | IDENTIFIER LPARENTHESIS RPARENTHESIS              {$$=std::make_shared<pcc::FunctionCallNode>(ctx, $1, std::list<std::shared_ptr<pcc::ExprNode>>());}
     ;
 
 arguments
-    : arguments COMMA expression
-    | expression
+    : arguments COMMA expression    {$$=$1; $$.push_back($3);}
+    | expression                    {$$.push_back($1);}
     ;
 
 literal
     : BOOLEAN_LITERAL   {$$=$1;}
+    | CHAR_LITERAL      {$$=$1;}
     | INTEGER_LITERAL   {$$=$1;}
     | REAL_LITERAL      {$$=$1;}
     | STRING_LITERAL    {$$=$1;}

@@ -6,6 +6,8 @@
 #include <unistd.h>
 #endif
 
+#include <llvm/Support/raw_ostream.h>
+
 #include "Driver.hh"
 #include "Log.hh"
 #include "Version.hh"
@@ -34,7 +36,11 @@ int main(int argc, char* argv[]) {
     for (int i = optind; i < argc; i++) {
         pcc::Driver driver(argv[i]);
         std::string filename(argv[i]);
-        driver.Parse(filename);
+        std::shared_ptr<pcc::ProgramNode> root = driver.Parse(filename);
+        if (root != nullptr) {
+            root->CodeGen();
+        }
+        driver.GetContext()->GetModule()->print(llvm::errs(), nullptr);
     }
 
     return 0;

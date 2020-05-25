@@ -51,6 +51,7 @@ Value UnaryExprNode::CodeGen() {
     if (result == nullptr) {
         Log(LogLevel::PCC_ERROR, "failed to generate a unary operation");
     }
+    type_ = value_->GetType();
     return result;
 }
 

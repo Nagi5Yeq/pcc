@@ -339,10 +339,9 @@ FunctionType::FunctionType(std::shared_ptr<Type> ReturnType,
     , ReturnType_(ReturnType)
     , ArgTypes_(ArgTypes) {
     std::vector<llvm::Type*> params(ArgTypes_.size());
-    std::transform(ArgTypes_.cbegin(), ArgTypes_.cend(), params.begin(),
-                   [](const Declaration& decl) {
-                       return std::get<1>(decl)->GetLLVMType();
-                   });
+    std::transform(
+        ArgTypes_.cbegin(), ArgTypes_.cend(), params.begin(),
+        [](std::shared_ptr<Type> decl) { return decl->GetLLVMType(); });
     LLVMType_ =
         llvm::FunctionType::get(ReturnType_->GetLLVMType(), params, false);
 }

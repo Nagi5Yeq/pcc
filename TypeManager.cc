@@ -190,8 +190,10 @@ std::shared_ptr<FunctionType> TypeManager::CreateFunctionType(
             name.append((*ArgIt)->GetCommonName());
         }
     }
-    types_.push_back(std::make_shared<FunctionType>(
-        ReturnType, ArgTypes, ReturnType->GetCommonName() + name + ")"));
+    std::shared_ptr<FunctionType> NewType = std::make_shared<FunctionType>(
+        ReturnType, ArgTypes, ReturnType->GetCommonName() + name + ")");
+    types_.push_back(NewType);
+    return NewType;
 }
 
 } // namespace pcc

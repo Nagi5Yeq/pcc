@@ -3,6 +3,7 @@
 
 #include <cstdio>
 
+#include "BaseNode.hh"
 #include "Context.hh"
 #include "Location.hh"
 
@@ -13,11 +14,14 @@ class Driver {
     ~Driver();
     int StartLexer(std::string& filename);
     void StopLexer();
-    void Parse(std::string& filename);
+    std::shared_ptr<ProgramNode> Parse(std::string& filename);
+    void SetRoot(std::shared_ptr<ProgramNode> root);
+    Context* GetContext();
     Location location_;
 
   private:
     Context context_;
+    std::shared_ptr<ProgramNode> root_;
 };
 } // namespace pcc
 
