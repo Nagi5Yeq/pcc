@@ -27,6 +27,7 @@ PCC_NORETURN void ShowHelp() {
     std::cerr << PCC_NAME " version " PCC_VERSION_STRING "\n"
               << "Usage: " PCC_NAME " [-vVh] file...\n"
               << "    -v   Verbose mode.\n"
+                 "    -vv  Very verbose mode.\n"
                  "    -V   Show version and exit.\n"
                  "    -h   Show this help and exit."
               << std::endl;

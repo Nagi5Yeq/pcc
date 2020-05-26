@@ -46,6 +46,8 @@ Value FunctionNode::CodeGen() {
     function->setCallingConv(llvm::CallingConv::C);
     llvm::BasicBlock* block =
         llvm::BasicBlock::Create(GlobalLLVMContext, name_, function);
+    Log(LogLevel::PCC_INFO, "generating function %s of type %s", name_.c_str(),
+        type->GetCommonName());
     builder->SetInsertPoint(block);
     // alloc arguments
     llvm::Function::arg_iterator ArgIt = function->arg_begin();

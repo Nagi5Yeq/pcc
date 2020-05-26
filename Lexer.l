@@ -24,7 +24,7 @@ namespace pcc {
 %option never-interactive
 %option nounistd
 %option case-insensitive
-%option noyywrap nounput noinput batch debug
+%option noyywrap nounput noinput batch
 
 decimal         ([1-9][0-9]*)|0
 octal           0[0-7]*
@@ -158,9 +158,12 @@ white           [\t\f\r ]
 
 namespace pcc {
 int Driver::StartLexer(std::string& filename) {
+    if(CurrentLogLevel==LogLevel::PCC_DEBUG){
+        yy_flex_debug = 1;
+    }
     yyin = std::fopen(filename.c_str(), "r");
     if (yyin == NULL) {
-        Log(PCC_ERROR, "Failed to open file %s", filename.c_str());
+        Log(LogLevel::PCC_ERROR, "Failed to open file %s", filename.c_str());
         return -1;
     }
     return 0;

@@ -1,4 +1,5 @@
 #include "Driver.hh"
+#include "Log.hh"
 #include "Parser.hh"
 
 namespace pcc {
@@ -13,6 +14,9 @@ std::shared_ptr<ProgramNode> Driver::Parse(std::string& filename) {
         return nullptr;
     }
     Parser parser(*this, &context_);
+    if (CurrentLogLevel == pcc::PCC_DEBUG) {
+        parser.set_debug_level(1);
+    }
     parser.parse();
     StopLexer();
     return root_;

@@ -5,7 +5,7 @@
 #include <cstdio>
 
 namespace pcc {
-enum LogLevel { PCC_ERROR, PCC_WARNING, PCC_INFO, PCC_DEBUG };
+enum LogLevel { PCC_DEBUG, PCC_INFO, PCC_WARNING, PCC_ERROR };
 
 extern LogLevel CurrentLogLevel;
 

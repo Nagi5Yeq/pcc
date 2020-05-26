@@ -36,6 +36,7 @@ YY_DECL;
 %define api.location.type {pcc::Location}
 %define api.value.type variant
 %define api.token.constructor
+%define parse.trace
 %define parse.error verbose
 %define parse.assert
 
@@ -62,7 +63,7 @@ YY_DECL;
 %type <std::shared_ptr<pcc::ExprNode>> literal lvalue
 %type <std::list<std::shared_ptr<pcc::ExprNode>>> arguments
 %type <std::shared_ptr<pcc::FunctionCallNode>> function_call
-%type <std::shared_ptr<pcc::ExprNode>> expression l1_expression l2_expression l3_expression
+%type <std::shared_ptr<pcc::ExprNode>> expression l1_expression l2_expression l3_expression standalone_expression
 %type <pcc::BinaryOperator> l1_operator l2_operator l3_operator
 %type <pcc::UnaryOperator> l4_operator
 
@@ -203,11 +204,15 @@ l2_expression
     ;
 
 l3_expression
+    : l4_operator l3_expression             {$$=std::make_shared<pcc::UnaryExprNode>(ctx,$1,$2);}
+    | standalone_expression                 {$$=$1;}
+    ;
+
+standalone_expression
     : lvalue                                {$$=std::make_shared<pcc::L2RCastingNode>(ctx, $1);}
     | function_call                         {$$=$1;}
     | literal                               {$$=$1;}
     | LPARENTHESIS expression RPARENTHESIS  {$$=$2;}
-    | l4_operator l3_expression             {$$=std::make_shared<pcc::UnaryExprNode>(ctx,$1,$2);}
     ;
 
 l1_operator
@@ -240,9 +245,9 @@ l4_operator
     ;
 
 lvalue
-    : IDENTIFIER                                {$$=std::make_shared<pcc::IdentifierNode>(ctx, $1);}
-    | expression LBRACKET expression RBRACKET   {$$=std::make_shared<pcc::BinaryExprNode>(ctx, pcc::BinaryOperator::ARRAY_ACCESS, $1, $3);}
-    | expression DOT IDENTIFIER
+    : IDENTIFIER                                            {$$=std::make_shared<pcc::IdentifierNode>(ctx, $1);}
+    | standalone_expression LBRACKET expression RBRACKET    {$$=std::make_shared<pcc::BinaryExprNode>(ctx, pcc::BinaryOperator::ARRAY_ACCESS, $1, $3);}
+    | standalone_expression DOT IDENTIFIER
     ;
 
 function_call

@@ -14,11 +14,11 @@
 
 int main(int argc, char* argv[]) {
     int rv;
-    pcc::LogLevel level = pcc::PCC_WARNING;
+    int level = pcc::ToUnderlying(pcc::PCC_WARNING);
     while ((rv = getopt(argc, argv, "vVh")) != -1) {
         switch (rv) {
         case 'v':
-            level = pcc::PCC_DEBUG;
+            level = (level == 0 ? 0 : level - 1);
             break;
         case 'V':
             pcc::ShowVersion();
@@ -29,6 +29,7 @@ int main(int argc, char* argv[]) {
             pcc::ShowHelp();
         }
     }
+    pcc::SetLogLevel(static_cast<pcc::LogLevel>(level));
     if (optind >= argc) {
         pcc::Log(pcc::PCC_ERROR, "No input file specified");
         return 0;
