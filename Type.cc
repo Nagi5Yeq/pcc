@@ -316,7 +316,7 @@ Value PointerType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
         &PointerType::CreateGe,   &PointerType::CreateEq,
         &PointerType::CreateNe,   &PointerType::NotAllowed,
         &PointerType::NotAllowed, &PointerType::NotAllowed,
-        &PointerType::NotAllowed};
+        &PointerType::CreateArrayAccess};
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
@@ -329,7 +329,7 @@ Value PointerType::CreatePointerSub(Value v0, Value v1, Context* context) {
 }
 
 Value PointerType::CreateArrayAccess(Value v0, Value v1, Context* context) {
-    return context->GetBuilder()->CreateInBoundsGEP(LLVMType_, v0, v1);
+    return context->GetBuilder()->CreateInBoundsGEP(v0, v1);
 }
 
 FunctionType::FunctionType(std::shared_ptr<Type> ReturnType,

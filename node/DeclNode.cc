@@ -1,6 +1,6 @@
-#include "DeclNode.hh"
-
 #include <llvm/IR/IRBuilder.h>
+
+#include "DeclNode.hh"
 
 namespace pcc {
 VarDeclNode::VarDeclNode(Context* context, VariableList* scope,

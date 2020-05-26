@@ -33,8 +33,8 @@ using RealLiteralNode = LiteralNode<float>;
 
 class StringLiteralNode : public ExprNode {
   public:
-    StringLiteralNode(Context* context, std::shared_ptr<Type> type, char* begin,
-                      char* end);
+    StringLiteralNode(Context* context, std::shared_ptr<Type> type,
+                      std::vector<char> value);
     Value CodeGen() override;
 
   private:

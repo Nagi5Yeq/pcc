@@ -30,12 +30,12 @@ decimal         ([1-9][0-9]*)|0
 octal           0[0-7]*
 hexadecimal     0[xX][0-9a-fA-F]
 
-integer         [+-]?({decimal}|{octal}|{hexadecimal})
+integer         {decimal}|{octal}|{hexadecimal}
 
 real_exp        [0-9]*(\.[0-9]*)?[eE]{decimal}
 real_noexp      [0-9]*\.[0-9]*
 
-real            [+-]?({real_exp}|{real_noexp})
+real            {real_exp}|{real_noexp}
 
 trival_char     [0-9a-zA-Z_{}[\]#()<>%:;.?*+\-/^&|~!=,\\" \t\n\v\f]
 escaped_char    \\[\'?\\abfnrtv]
@@ -106,17 +106,17 @@ white           [\t\f\r ]
 "real"      {return Parser::make_REAL(loc);}
 "string"    {return Parser::make_STRING(loc);}
 
-"true"      {return pcc::Lexer::make_BOOLEAN_LITERAL(true, context, loc);}
-"false"     {return pcc::Lexer::make_BOOLEAN_LITERAL(false, context, loc);}
+"true"      {return Parser::make_BOOLEAN_LITERAL(true, loc);}
+"false"     {return Parser::make_BOOLEAN_LITERAL(false, loc);}
 
 {integer} {
     int number = std::strtol(yytext, NULL, 0);
-    return pcc::Lexer::make_INTEGER_LITERAL(number, context, loc);
+    return Parser::make_INTEGER_LITERAL(number, loc);
 }
 
 {real} {
     float number = std::strtof(yytext, NULL);
-    return pcc::Lexer::make_REAL_LITERAL(number, context, loc);
+    return Parser::make_REAL_LITERAL(number, loc);
 }
 
 {char} {
@@ -124,7 +124,7 @@ white           [\t\f\r ]
     s = yytext + 1;
     end = s + yyleng - 2;
     pcc::Lexer::GetUnescapedChar(s, end, &c);
-    return pcc::Lexer::make_CHAR_LITERAL(c, context, loc);
+    return Parser::make_CHAR_LITERAL(c, loc);
 }
 
 {string} {
@@ -136,7 +136,7 @@ white           [\t\f\r ]
         p++;
     }
     *p++ = '\0';
-    return pcc::Lexer::make_STRING_LITERAL(yytext + 1, p, context, loc);
+    return Parser::make_STRING_LITERAL(std::vector<char>(yytext + 1, p), loc);
 }
 
 {identifier} {

@@ -20,7 +20,10 @@ namespace pcc{
 %param {pcc::Context* ctx}
 
 %code{
+#include <sstream>
+
 #include "Driver.hh"
+#include "Log.hh"
 
 #define YY_DECL                                                                \
     pcc::Parser::symbol_type yylex(pcc::Driver& driver, pcc::Context* ctx)
@@ -36,8 +39,9 @@ YY_DECL;
 %define parse.error verbose
 %define parse.assert
 
+%token FILE_END 0;
 %token COLON SEMICOLON COMMA DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
-%token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION FILE_END
+%token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION
 %token IF THEN ELSE WHILE DO
 %token BOOLEAN CHAR INTEGER REAL STRING
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE
@@ -50,11 +54,11 @@ YY_DECL;
 %type <std::pair<std::list<std::string>, std::shared_ptr<pcc::Type>>> var_decl
 %type <std::list<std::string>> vars
 
-%type <std::shared_ptr<pcc::BooleanLiteralNode>> BOOLEAN_LITERAL
-%type <std::shared_ptr<pcc::CharLiteralNode>> CHAR_LITERAL
-%type <std::shared_ptr<pcc::IntegerLiteralNode>> INTEGER_LITERAL
-%type <std::shared_ptr<pcc::RealLiteralNode>> REAL_LITERAL
-%type <std::shared_ptr<pcc::StringLiteralNode>> STRING_LITERAL
+%type <bool> BOOLEAN_LITERAL
+%type <char> CHAR_LITERAL
+%type <int> INTEGER_LITERAL
+%type <float> REAL_LITERAL
+%type <std::vector<char>> STRING_LITERAL
 %type <std::shared_ptr<pcc::ExprNode>> literal lvalue
 %type <std::list<std::shared_ptr<pcc::ExprNode>>> arguments
 %type <std::shared_ptr<pcc::FunctionCallNode>> function_call
@@ -237,8 +241,8 @@ l4_operator
 
 lvalue
     : IDENTIFIER                                {$$=std::make_shared<pcc::IdentifierNode>(ctx, $1);}
-    | IDENTIFIER LBRACKET expression RBRACKET   {$$=std::make_shared<pcc::BinaryExprNode>(ctx, pcc::BinaryOperator::ARRAY_ACCESS, std::make_shared<pcc::IdentifierNode>(ctx, $1), $3);}
-    | IDENTIFIER DOT IDENTIFIER
+    | expression LBRACKET expression RBRACKET   {$$=std::make_shared<pcc::BinaryExprNode>(ctx, pcc::BinaryOperator::ARRAY_ACCESS, $1, $3);}
+    | expression DOT IDENTIFIER
     ;
 
 function_call
@@ -252,11 +256,11 @@ arguments
     ;
 
 literal
-    : BOOLEAN_LITERAL   {$$=$1;}
-    | CHAR_LITERAL      {$$=$1;}
-    | INTEGER_LITERAL   {$$=$1;}
-    | REAL_LITERAL      {$$=$1;}
-    | STRING_LITERAL    {$$=$1;}
+    : BOOLEAN_LITERAL   {$$=std::make_shared<pcc::BooleanLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::BOOLEAN), $1);}
+    | CHAR_LITERAL      {$$=std::make_shared<pcc::CharLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::CHAR), $1);}
+    | INTEGER_LITERAL   {$$=std::make_shared<pcc::IntegerLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::INTEGER), $1);}
+    | REAL_LITERAL      {$$=std::make_shared<pcc::RealLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::REAL), $1);}
+    | STRING_LITERAL    {$$=std::make_shared<pcc::StringLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::STRING), $1);}
     ;
 
 %%
@@ -265,7 +269,9 @@ namespace pcc {
 
     void Parser::error (const location_type& l, const std::string& m)
     {
-        std::cerr << l << ":" << m << '\n';
+        std::stringstream loc;
+        loc<<l;
+        Log(LogLevel::PCC_ERROR, "error on %s: %s", loc.str().c_str(), m.c_str());
     }
 
 }

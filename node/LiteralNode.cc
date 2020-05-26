@@ -27,10 +27,10 @@ template <> Value RealLiteralNode::CodeGen() {
 }
 
 StringLiteralNode::StringLiteralNode(Context* context,
-                                     std::shared_ptr<Type> type, char* begin,
-                                     char* end)
+                                     std::shared_ptr<Type> type,
+                                     std::vector<char> value)
     : ExprNode(context)
-    , value_(begin, end) {
+    , value_(value) {
     type_ = type;
 }
 
@@ -41,8 +41,8 @@ Value StringLiteralNode::CodeGen() {
     llvm::Constant* ConstantString =
         llvm::ConstantDataArray::get(GlobalLLVMContext, value_);
     llvm::Constant* GlobalString = new llvm::GlobalVariable(
-        type_->GetLLVMType(), true, llvm::GlobalValue::PrivateLinkage,
-        ConstantString);
+        *context_->GetModule(), ConstantString->getType(), true,
+        llvm::GlobalValue::PrivateLinkage, ConstantString);
     Value ZeroIndex =
         llvm::ConstantInt::get(pointer->GetIndexType()->GetLLVMType(), 0, true);
     return builder->CreateInBoundsGEP(GlobalString, {ZeroIndex, ZeroIndex});

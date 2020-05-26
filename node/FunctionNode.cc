@@ -64,12 +64,15 @@ Value FunctionNode::CodeGen() {
     // push the function scope variables
     context_->PushScope(&locals_);
     body_->CodeGen();
-    builder->CreateRet(rv);
+    builder->CreateRet(builder->CreateLoad(type_->GetLLVMType(), rv));
     context_->PopScope();
     std::string msg;
     llvm::raw_string_ostream MsgStream(msg);
     llvm::verifyFunction(*function, &MsgStream);
-    Log(LogLevel::PCC_INFO, "%s", msg.c_str());
+    MsgStream.flush();
+    if (!msg.empty()) {
+        Log(LogLevel::PCC_INFO, "%s", msg.c_str());
+    }
     return nullptr;
 }
 
