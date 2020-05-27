@@ -43,7 +43,7 @@ YY_DECL;
 %token FILE_END 0;
 %token COLON SEMICOLON COMMA DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
 %token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION
-%token IF THEN ELSE WHILE DO
+%token IF THEN ELSE WHILE DO REPEAT UNTIL
 %token BOOLEAN CHAR INTEGER REAL STRING
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE
 %token AND NOT OR XOR
@@ -76,6 +76,7 @@ YY_DECL;
 %type <std::shared_ptr<pcc::BaseNode>> statement open_statement closed_statement normal_statement
 %type <std::shared_ptr<pcc::EmptyStatementNode>> empty_statement
 %type <std::shared_ptr<pcc::AssignStatementNode>> assign_statement
+%type <std::shared_ptr<pcc::RepeatStatementNode>> repeat_statement
 
 %%
 
@@ -95,7 +96,7 @@ global_decls
     ;
 
 global_decl
-    : VAR var_decls {$$=std::make_shared<pcc::VarDeclNode>(ctx, nullptr, $2);}
+    : VAR var_decls SEMICOLON   {$$=std::make_shared<pcc::VarDeclNode>(ctx, nullptr, $2);}
     ;
 
 functions
@@ -106,12 +107,12 @@ functions
 /* ==================[var part]================== */
 
 var_decls
-    : var_decls var_decl    {$$=$1; auto NewChilds=std::get<0>($2); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($2)});}}
-    | var_decl              {auto NewChilds=std::get<0>($1); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($1)});}}
+    : var_decls SEMICOLON var_decl  {$$=$1; auto NewChilds=std::get<0>($3); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($3)});}}
+    | var_decl                      {auto NewChilds=std::get<0>($1); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($1)});}}
     ;
 
 var_decl
-    : vars COLON type SEMICOLON {$$={$1,$3};}
+    : vars COLON type {$$={$1,$3};}
     ;
 
 vars
@@ -132,6 +133,8 @@ type
 function
     : FUNCTION IDENTIFIER LPARENTHESIS var_decls RPARENTHESIS COLON type SEMICOLON
       local_decls statement_block   {$$=std::make_shared<pcc::FunctionNode>(ctx, $2, $4, $9, $7, $10);}
+    | FUNCTION IDENTIFIER LPARENTHESIS RPARENTHESIS COLON type SEMICOLON
+      local_decls statement_block   {$$=std::make_shared<pcc::FunctionNode>(ctx, $2, std::list<Declaration>(), $8, $6, $9);}
     ;
 
 local_decls 
@@ -140,7 +143,7 @@ local_decls
     ;
 
 local_decl
-    : VAR var_decls {$$=std::make_shared<pcc::VarDeclNode>(ctx, nullptr, $2);}
+    : VAR var_decls SEMICOLON   {$$=std::make_shared<pcc::VarDeclNode>(ctx, nullptr, $2);}
     ;
 
 /* ==================[statements part]================== */
@@ -156,21 +159,22 @@ statement
     ;
 
 open_statement
-    : IF expression THEN statement
-    | IF expression THEN closed_statement ELSE open_statement
-    | WHILE expression DO open_statement
+    : IF expression THEN statement                              {$$=std::make_shared<pcc::IfStatementNode>(ctx, $2, $4, nullptr);}
+    | IF expression THEN closed_statement ELSE open_statement   {$$=std::make_shared<pcc::IfStatementNode>(ctx, $2, $4, $6);}
+    | WHILE expression DO open_statement                        {$$=std::make_shared<pcc::WhileStatementNode>(ctx, $2, $4);}
     ;
 
 closed_statement
-    : normal_statement                                              {$$=$1;}
-    | IF expression THEN closed_statement ELSE closed_statement
-    | WHILE expression DO closed_statement
+    : normal_statement                                          {$$=$1;}
+    | IF expression THEN closed_statement ELSE closed_statement {$$=std::make_shared<pcc::IfStatementNode>(ctx, $2, $4, $6);}
+    | WHILE expression DO closed_statement                      {$$=std::make_shared<pcc::WhileStatementNode>(ctx, $2, $4);}
     ;
 
 normal_statement
     : statement_block   {$$=$1;}
     | empty_statement   {$$=$1;}
     | assign_statement  {$$=$1;}
+    | repeat_statement  {$$=$1;}
     | expression        {$$=$1;}
     ;
 
@@ -179,7 +183,11 @@ statement_block
     ;
 
 empty_statement
-    :                           {$$=std::make_shared<pcc::EmptyStatementNode>(ctx);}
+    :   {$$=std::make_shared<pcc::EmptyStatementNode>(ctx);}
+    ;
+
+repeat_statement
+    : REPEAT statement UNTIL expression {$$=std::make_shared<pcc::RepeatStatementNode>(ctx, $4, $2);}
     ;
 
 assign_statement
@@ -234,6 +242,7 @@ l2_operator
 l3_operator
     : MUL       {$$=pcc::BinaryOperator::MUL;}
     | DIV       {$$=pcc::BinaryOperator::DIV;}
+    | REAL_DIV  {$$=pcc::BinaryOperator::REAL_DIV;}
     | MOD       {$$=pcc::BinaryOperator::MOD;}
     | AND       {$$=pcc::BinaryOperator::AND;}
     ;
@@ -276,7 +285,7 @@ namespace pcc {
     {
         std::stringstream loc;
         loc<<l;
-        Log(LogLevel::PCC_ERROR, "error on %s: %s", loc.str().c_str(), m.c_str());
+        Log(LogLevel::PCC_ERROR, "error at %s: %s", loc.str().c_str(), m.c_str());
     }
 
 }

@@ -24,7 +24,7 @@ namespace pcc {
 %option never-interactive
 %option nounistd
 %option case-insensitive
-%option noyywrap nounput noinput batch
+%option noyywrap nounput noinput batch debug
 
 decimal         ([1-9][0-9]*)|0
 octal           0[0-7]*
@@ -46,7 +46,7 @@ char_value      {trival_char}|{escaped_char}|{hex_char}|{oct_char}|\\'
 char            '{char_value}'
 string          '{char_value}+'
 
-identifier      [a-z][0-9a-z]*
+identifier      [a-z][0-9a-z_]*
 
 white           [\t\f\r ]
 
@@ -65,6 +65,7 @@ white           [\t\f\r ]
 ":"         {return Parser::make_COLON(loc);}
 ";"         {return Parser::make_SEMICOLON(loc);}
 "."         {return Parser::make_DOT(loc);}
+","         {return Parser::make_COMMA(loc);}
 "["         {return Parser::make_LBRACKET(loc);}
 "]"         {return Parser::make_RBRACKET(loc);}
 "("         {return Parser::make_LPARENTHESIS(loc);}
@@ -100,6 +101,8 @@ white           [\t\f\r ]
 "else"      {return Parser::make_ELSE(loc);}
 "while"     {return Parser::make_WHILE(loc);}
 "do"        {return Parser::make_DO(loc);}
+"repeat"    {return Parser::make_REPEAT(loc);}
+"until"     {return Parser::make_UNTIL(loc);}
 "integer"   {return Parser::make_INTEGER(loc);}
 "boolean"   {return Parser::make_BOOLEAN(loc);}
 "char"      {return Parser::make_CHAR(loc);}
@@ -158,9 +161,7 @@ white           [\t\f\r ]
 
 namespace pcc {
 int Driver::StartLexer(std::string& filename) {
-    if(CurrentLogLevel==LogLevel::PCC_DEBUG){
-        yy_flex_debug = 1;
-    }
+    yy_flex_debug = (CurrentLogLevel==LogLevel::PCC_DEBUG);
     yyin = std::fopen(filename.c_str(), "r");
     if (yyin == NULL) {
         Log(LogLevel::PCC_ERROR, "Failed to open file %s", filename.c_str());

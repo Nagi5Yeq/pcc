@@ -89,17 +89,18 @@ std::pair<std::shared_ptr<Type>, Value>
         std::dynamic_pointer_cast<RealType>(RightType);
     Value ConvertedLeft, ConvertedRight;
     std::shared_ptr<Type> CommonType;
-    if (LeftType != RightType) {
+    if (op == BinaryOperator::REAL_DIV) {
+        // we can only set the CommonType to real for REAL_DIV on builtin types,
+        // for other types, REAL_DIV and DIV are unavaliable.
+        CommonType = builtins_[ToUnderlying(BuiltinType::REAL)];
+        op = BinaryOperator::DIV;
+    } else if (LeftType != RightType) {
         // we can cast the boolean, char, integer and real.
-        if (LeftRealType != nullptr && RightIntegerBaseType != nullptr) {
-            ConvertedLeft = left;
-            ConvertedRight =
-                builder->CreateSIToFP(right, LeftType->GetLLVMType());
+        if (op == BinaryOperator::REAL_DIV) {
+            CommonType = builtins_[ToUnderlying(BuiltinType::REAL)];
+        } else if (LeftRealType != nullptr && RightIntegerBaseType != nullptr) {
             CommonType = LeftType;
         } else if (RightRealType != nullptr && LeftIntegerBaseType != nullptr) {
-            ConvertedLeft =
-                builder->CreateSIToFP(left, RightType->GetLLVMType());
-            ConvertedRight = right;
             CommonType = RightType;
         } else if (LeftIntegerBaseType != nullptr &&
                    RightIntegerBaseType != nullptr) {
@@ -107,10 +108,6 @@ std::pair<std::shared_ptr<Type>, Value>
                                   RightIntegerBaseType->GetWidth()
                               ? LeftType
                               : RightType);
-            ConvertedLeft =
-                builder->CreateSExt(left, CommonType->GetLLVMType());
-            ConvertedRight =
-                builder->CreateSExt(right, CommonType->GetLLVMType());
         } else {
             Log(LogLevel::PCC_ERROR,
                 "can not apply binary operator on two different type %s and %s",
@@ -118,10 +115,10 @@ std::pair<std::shared_ptr<Type>, Value>
             return {nullptr, nullptr};
         }
     } else {
-        ConvertedLeft = left;
-        ConvertedRight = right;
         CommonType = LeftType;
     }
+    ConvertedLeft = CreateCast(CommonType, LeftType, left, context);
+    ConvertedRight = CreateCast(CommonType, RightType, right, context);
     Value result = CommonType->CreateBinaryOperation(op, ConvertedLeft,
                                                      ConvertedRight, context);
     if (result == nullptr) {

@@ -90,8 +90,8 @@ Value FunctionCallNode::CodeGen() {
             name_.c_str());
         return nullptr;
     }
-    llvm::FunctionCallee fp =
-        context_->GetModule()->getOrInsertFunction(name_, type->GetLLVMType());
+    llvm::FunctionCallee fp = context_->GetModule()->getOrInsertFunction(
+        name_, llvm::cast<llvm::FunctionType>(type->GetLLVMType()));
     const std::vector<std::shared_ptr<Type>>& ArgTypes = type->GetArgTypes();
     std::vector<Value> ArgValues(args_.size());
     auto ArgTypeIt = ArgTypes.begin();

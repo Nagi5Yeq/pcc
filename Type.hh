@@ -29,7 +29,9 @@ enum class BinaryOperator {
     OR,
     XOR,
     ARRAY_ACCESS,
-    BINARYOP_NUMBER
+    BINARYOP_NUMBER,
+    REAL_DIV // the difference between REAL_DIV and DIV is handled in
+             // TypeManager, thus we don't need to create instruction for this.
 };
 
 enum class UnaryOperator { POS, NEG, NOT, UNARYOP_NUMEBR };
