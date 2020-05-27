@@ -94,6 +94,7 @@ Value WhileStatementNode::CodeGen() {
         llvm::BasicBlock::Create(GlobalLLVMContext, "loop");
     llvm::BasicBlock* EndBlock =
         llvm::BasicBlock::Create(GlobalLLVMContext, "done");
+    builder->CreateBr(StartBlock);
     builder->SetInsertPoint(StartBlock);
     Value ExprValue = manager->CreateCast(boolean, expr_->GetType(),
                                           expr_->CodeGen(), context_);
@@ -124,6 +125,7 @@ Value RepeatStatementNode::CodeGen() {
         llvm::BasicBlock::Create(GlobalLLVMContext, "loop", body);
     llvm::BasicBlock* EndBlock =
         llvm::BasicBlock::Create(GlobalLLVMContext, "done");
+    builder->CreateBr(LoopBlock);
     builder->SetInsertPoint(LoopBlock);
     RepeatBody_->CodeGen();
     Value ExprValue = manager->CreateCast(boolean, expr_->GetType(),
