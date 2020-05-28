@@ -91,7 +91,7 @@ program_header
     ;
 
 global_decls
-    : global_decls global_decl  {$$=$1; $$.push_back($2);}
+    : global_decls global_decl  {$$=std::move($1); $$.push_back($2);}
     |                           {$$=std::list<std::shared_ptr<pcc::BaseNode>>();}
     ;
 
@@ -100,14 +100,14 @@ global_decl
     ;
 
 functions
-    : functions function SEMICOLON  {$$=$1; $$.push_back($2);}
+    : functions function SEMICOLON  {$$=std::move($1); $$.push_back($2);}
     |                               {$$=std::list<std::shared_ptr<pcc::FunctionNode>>();}
     ;
 
 /* ==================[var part]================== */
 
 var_decls
-    : var_decls SEMICOLON var_decl  {$$=$1; auto NewChilds=std::get<0>($3); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($3)});}}
+    : var_decls SEMICOLON var_decl  {$$=std::move($1); auto NewChilds=std::get<0>($3); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($3)});}}
     | var_decl                      {auto NewChilds=std::get<0>($1); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($1)});}}
     ;
 
@@ -116,7 +116,7 @@ var_decl
     ;
 
 vars
-    : vars COMMA IDENTIFIER {$$=$1; $$.push_back($3);}
+    : vars COMMA IDENTIFIER {$$=std::move($1); $$.push_back($3);}
     | IDENTIFIER            {$$.push_back($1);}
     ;
 
@@ -139,7 +139,7 @@ function
     ;
 
 local_decls 
-    : local_decls local_decl    {$$=$1; $$.push_back($2);}
+    : local_decls local_decl    {$$=std::move($1); $$.push_back($2);}
     |                           {$$=std::list<std::shared_ptr<pcc::BaseNode>>();}
     ;
 
@@ -269,7 +269,7 @@ function_call
     ;
 
 arguments
-    : arguments COMMA expression    {$$=$1; $$.push_back($3);}
+    : arguments COMMA expression    {$$=std::move($1); $$.push_back($3);}
     | expression                    {$$.push_back($1);}
     ;
 

@@ -1,7 +1,14 @@
 #include "StatementNode.hh"
 
 namespace pcc {
-template <> Value StatementListNode::CodeGen() {
+StatementListNode::StatementListNode(Context* context)
+    : BaseNode(context) {}
+
+void StatementListNode::Append(std::shared_ptr<BaseNode> child) {
+    childs_.push_back(child);
+}
+
+Value StatementListNode::CodeGen() {
     Value result = nullptr;
     for (auto& child : childs_) {
         result = child->CodeGen();

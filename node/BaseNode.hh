@@ -15,17 +15,6 @@ class BaseNode {
     Context* context_;
 };
 
-template <typename T, class Base = BaseNode> class ListNode : public Base {
-  public:
-    ListNode(Context* context)
-        : Base(context) {}
-    void Append(T child) { childs_.push_back(child); }
-    virtual Value CodeGen();
-
-  private:
-    std::list<T> childs_;
-};
-
 class FunctionNode;
 
 class ProgramNode : public BaseNode {

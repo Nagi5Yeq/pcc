@@ -7,7 +7,15 @@
 #include "ExprNode.hh"
 
 namespace pcc {
-using StatementListNode = ListNode<std::shared_ptr<BaseNode>>;
+class StatementListNode : public BaseNode {
+  public:
+    StatementListNode(Context* context);
+    void Append(std::shared_ptr<BaseNode> child);
+    virtual Value CodeGen();
+
+  private:
+    std::list<std::shared_ptr<BaseNode>> childs_;
+};
 
 class EmptyStatementNode : public BaseNode {
   public:
