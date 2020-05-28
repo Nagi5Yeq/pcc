@@ -93,6 +93,14 @@ Value Type::CreateXor(Value v0, Value v1, Context* context) {
     return context->GetBuilder()->CreateXor(v0, v1);
 }
 
+Value Type::CreateShl(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateShl(v0, v1);
+}
+
+Value Type::CreateShr(Value v0, Value v1, Context* context) {
+    return context->GetBuilder()->CreateAShr(v0, v1);
+}
+
 Value Type::CreatePos(Value v, Context* context) { return v; }
 
 Value Type::CreateNeg(Value v, Context* context) {
@@ -174,6 +182,7 @@ Value BooleanType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
         &BooleanType::NotAllowed, &BooleanType::CreateEq,
         &BooleanType::CreateNe,   &BooleanType::CreateAnd,
         &BooleanType::CreateOr,   &BooleanType::CreateXor,
+        &BooleanType::CreateShl,  &BooleanType::CreateShr,
         &BooleanType::NotAllowed,
     };
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
@@ -198,7 +207,8 @@ Value CharType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
         &CharType::CreateDiv, &CharType::CreateMod, &CharType::CreateLt,
         &CharType::CreateLe,  &CharType::CreateGt,  &CharType::CreateGe,
         &CharType::CreateEq,  &CharType::CreateNe,  &CharType::CreateAnd,
-        &CharType::CreateOr,  &CharType::CreateXor, &CharType::NotAllowed};
+        &CharType::CreateOr,  &CharType::CreateXor, &CharType::CreateShl,
+        &CharType::CreateShr, &CharType::NotAllowed};
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
@@ -225,6 +235,7 @@ Value IntegerType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
         &IntegerType::CreateGe,  &IntegerType::CreateEq,
         &IntegerType::CreateNe,  &IntegerType::CreateAnd,
         &IntegerType::CreateOr,  &IntegerType::CreateXor,
+        &IntegerType::CreateShl, &IntegerType::CreateShr,
         &IntegerType::NotAllowed};
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
@@ -249,7 +260,8 @@ Value RealType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
         &RealType::CreateFDiv, &RealType::CreateFMod, &RealType::CreateFLt,
         &RealType::CreateFLe,  &RealType::CreateFGt,  &RealType::CreateFGe,
         &RealType::CreateFEq,  &RealType::CreateFNe,  &RealType::NotAllowed,
-        &RealType::NotAllowed, &RealType::NotAllowed, &RealType::NotAllowed};
+        &RealType::NotAllowed, &RealType::NotAllowed, &RealType::NotAllowed,
+        &RealType::NotAllowed, &RealType::NotAllowed};
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
@@ -287,7 +299,7 @@ Value ArrayType::CreateArrayAccess(Value v0, Value v1, Context* context) {
         llvm::ConstantInt::get(IndexType_->GetLLVMType(), 0, true),
         IndexType_->CreateBinaryOperation(BinaryOperator::SUB, v1, start_,
                                           context)};
-    return context->GetBuilder()->CreateInBoundsGEP(LLVMType_, v0, indices);
+    return context->GetBuilder()->CreateInBoundsGEP(v0, indices);
 }
 
 PointerType::PointerType(std::shared_ptr<Type> ElementType,
@@ -309,13 +321,14 @@ Value PointerType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
                                          Context* context) {
     static Value (pcc::PointerType::*operations[ToUnderlying(
         BinaryOperator::BINARYOP_NUMBER)])(Value, Value, Context*) = {
-        &PointerType::NotAllowed, &PointerType::CreatePointerSub,
-        &PointerType::NotAllowed, &PointerType::NotAllowed,
-        &PointerType::NotAllowed, &PointerType::CreateLt,
-        &PointerType::CreateLe,   &PointerType::CreateGt,
-        &PointerType::CreateGe,   &PointerType::CreateEq,
-        &PointerType::CreateNe,   &PointerType::NotAllowed,
-        &PointerType::NotAllowed, &PointerType::NotAllowed,
+        &PointerType::NotAllowed,       &PointerType::CreatePointerSub,
+        &PointerType::NotAllowed,       &PointerType::NotAllowed,
+        &PointerType::NotAllowed,       &PointerType::CreateLt,
+        &PointerType::CreateLe,         &PointerType::CreateGt,
+        &PointerType::CreateGe,         &PointerType::CreateEq,
+        &PointerType::CreateNe,         &PointerType::NotAllowed,
+        &PointerType::NotAllowed,       &PointerType::NotAllowed,
+        &PointerType::NotAllowed,       &PointerType::NotAllowed,
         &PointerType::CreateArrayAccess};
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }

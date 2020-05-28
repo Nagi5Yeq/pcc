@@ -17,6 +17,9 @@ begin
     b:=1; e:=2;
     a:=1/2+b/e;
     d:=1 div 2 + b div e;
+
+    a:=a and e or b xor d;
+    d:=(a shl 3) xor (not a shr b);
     arithmetic_test:=a+d
 end;
 
@@ -25,10 +28,25 @@ var
     s:string;
     a,b:char;
 begin
-    s='hello world';
+    s:='hello world';
     a:=s[3];
     b:=s[6];
     string_test:=s[b-a]
+end;
+
+function pointer_test():integer;
+var
+    a,b:integer;
+    p:^integer;
+    s:string;
+    ps:^char;
+begin
+    a:=1;
+    p:=@a;
+    b:=p[0];
+    s:='testabcd';
+    ps:=s+2;
+    pointer_test:=b+ps[3];
 end;
 
 function recursion_test(x:integer):integer;
@@ -44,13 +62,12 @@ var
     b,c:integer;
 begin
     b:=3;
+    c:=0;
     if a<b then
-        if a>b then
-            c:=1
-        else
-            c:=0
+        c:=-1
     else
-        c:=-1;
+        if a>b then
+            c:=1;
     while b>0 do
     begin
         a:=a*b;

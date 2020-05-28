@@ -49,12 +49,12 @@ Value IfStatementNode::CodeGen() {
         llvm::BasicBlock::Create(GlobalLLVMContext, "then", body);
     llvm::BasicBlock* EndBlock =
         llvm::BasicBlock::Create(GlobalLLVMContext, "endif");
-    Value ExprValue = manager->CreateCast(boolean, expr_->GetType(),
-                                          expr_->CodeGen(), context_);
+    Value cond = expr_->CodeGen();
+    cond = manager->CreateCast(boolean, expr_->GetType(), cond, context_);
     if (ElsePart_ != nullptr) {
         llvm::BasicBlock* ElseBlock =
             llvm::BasicBlock::Create(GlobalLLVMContext, "else");
-        builder->CreateCondBr(ExprValue, ThenBlock, ElseBlock);
+        builder->CreateCondBr(cond, ThenBlock, ElseBlock);
         builder->SetInsertPoint(ThenBlock);
         ThenPart_->CodeGen();
         builder->CreateBr(EndBlock);
@@ -66,7 +66,7 @@ Value IfStatementNode::CodeGen() {
         builder->SetInsertPoint(EndBlock);
         return nullptr;
     }
-    builder->CreateCondBr(ExprValue, ThenBlock, EndBlock);
+    builder->CreateCondBr(cond, ThenBlock, EndBlock);
     builder->SetInsertPoint(ThenBlock);
     ThenPart_->CodeGen();
     builder->CreateBr(EndBlock);
@@ -96,9 +96,9 @@ Value WhileStatementNode::CodeGen() {
         llvm::BasicBlock::Create(GlobalLLVMContext, "done");
     builder->CreateBr(StartBlock);
     builder->SetInsertPoint(StartBlock);
-    Value ExprValue = manager->CreateCast(boolean, expr_->GetType(),
-                                          expr_->CodeGen(), context_);
-    builder->CreateCondBr(ExprValue, LoopBlock, EndBlock);
+    Value cond = expr_->CodeGen();
+    cond = manager->CreateCast(boolean, expr_->GetType(), cond, context_);
+    builder->CreateCondBr(cond, LoopBlock, EndBlock);
     body->getBasicBlockList().push_back(LoopBlock);
     builder->SetInsertPoint(LoopBlock);
     WhileBody_->CodeGen();
@@ -128,9 +128,9 @@ Value RepeatStatementNode::CodeGen() {
     builder->CreateBr(LoopBlock);
     builder->SetInsertPoint(LoopBlock);
     RepeatBody_->CodeGen();
-    Value ExprValue = manager->CreateCast(boolean, expr_->GetType(),
-                                          expr_->CodeGen(), context_);
-    builder->CreateCondBr(ExprValue, EndBlock, LoopBlock);
+    Value cond = expr_->CodeGen();
+    cond = manager->CreateCast(boolean, expr_->GetType(), cond, context_);
+    builder->CreateCondBr(cond, EndBlock, LoopBlock);
     body->getBasicBlockList().push_back(EndBlock);
     builder->SetInsertPoint(EndBlock);
     return nullptr;

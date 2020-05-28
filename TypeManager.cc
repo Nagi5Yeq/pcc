@@ -8,9 +8,8 @@ TypeManager::TypeManager()
                 std::make_shared<IntegerType>(), std::make_shared<RealType>()} {
     PointerDifferenceType_ = GetBuiltinType(BuiltinType::INTEGER);
     PointerIndexType_ = GetBuiltinType(BuiltinType::INTEGER);
-    builtins_.push_back(std::make_shared<PointerType>(
-        GetBuiltinType(BuiltinType::CHAR), PointerDifferenceType_,
-        PointerIndexType_, "string"));
+    builtins_.push_back(
+        GetPointerType(GetBuiltinType(BuiltinType::CHAR), "string"));
 }
 
 std::shared_ptr<Type> TypeManager::GetBuiltinType(BuiltinType type) {
@@ -70,15 +69,14 @@ std::pair<std::shared_ptr<Type>, Value>
     // add/sub a pointer with a integer
     if (op == BinaryOperator::ADD || op == BinaryOperator::SUB) {
         if (LeftPointerType != nullptr) {
-            if (RightIntegerBaseType != nullptr) {
+            if (RightIntegerBaseType == nullptr) {
                 Log(LogLevel::PCC_ERROR,
                     "can not add pointer with non-integer type %s");
                 return {nullptr, nullptr};
             }
             Value CastedInedx = builder->CreateSExtOrTrunc(
                 right, PointerIndexType_->GetLLVMType());
-            return {LeftType, builder->CreateInBoundsGEP(
-                                  LeftType->GetLLVMType(), left, CastedInedx)};
+            return {LeftType, builder->CreateInBoundsGEP(left, CastedInedx)};
         }
     }
 
@@ -175,6 +173,21 @@ Value TypeManager::CreateCast(std::shared_ptr<Type> DstType,
     return nullptr;
 }
 
+std::shared_ptr<PointerType>
+    TypeManager::GetPointerType(std::shared_ptr<Type> ElementType,
+                                const char* CustomName) {
+    decltype(PointerTypes_)::iterator result = PointerTypes_.find(ElementType);
+    if (result != PointerTypes_.end()) {
+        return std::get<1>(*result);
+    }
+    std::shared_ptr<PointerType> NewType = std::make_shared<PointerType>(
+        ElementType, PointerDifferenceType_, PointerIndexType_,
+        CustomName == nullptr ? "^" + std::string(ElementType->GetCommonName())
+                              : CustomName);
+    PointerTypes_.insert({ElementType, NewType});
+    return NewType;
+}
+
 std::shared_ptr<FunctionType> TypeManager::CreateFunctionType(
     std::shared_ptr<Type> ReturnType,
     std::vector<std::shared_ptr<Type>> ArgTypes) {
@@ -189,7 +202,7 @@ std::shared_ptr<FunctionType> TypeManager::CreateFunctionType(
     }
     std::shared_ptr<FunctionType> NewType = std::make_shared<FunctionType>(
         ReturnType, ArgTypes, ReturnType->GetCommonName() + name + ")");
-    types_.push_back(NewType);
+    FunctionTypes_.push_back(NewType);
     return NewType;
 }
 

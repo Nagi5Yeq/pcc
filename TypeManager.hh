@@ -16,6 +16,14 @@ class TypeManager {
     TypeManager();
     std::shared_ptr<Type> GetBuiltinType(BuiltinType type);
 
+    std::shared_ptr<PointerType>
+        GetPointerType(std::shared_ptr<Type> ElementType,
+                       const char* CustomName = nullptr);
+
+    std::shared_ptr<FunctionType>
+        CreateFunctionType(std::shared_ptr<Type> ReturnType,
+                           std::vector<std::shared_ptr<Type>> ArgTypes);
+
     // binary operators may change type
     std::pair<std::shared_ptr<Type>, Value>
         CreateOperation(BinaryOperator op, std::shared_ptr<Type> LeftType,
@@ -29,13 +37,11 @@ class TypeManager {
     Value CreateCast(std::shared_ptr<Type> DstType,
                      std::shared_ptr<Type> SrcType, Value v, Context* context);
 
-    std::shared_ptr<FunctionType>
-        CreateFunctionType(std::shared_ptr<Type> ReturnType,
-                           std::vector<std::shared_ptr<Type>> ArgTypes);
-
   private:
     std::vector<std::shared_ptr<Type>> builtins_;
-    std::vector<std::shared_ptr<Type>> types_;
+    std::map<std::shared_ptr<Type>, std::shared_ptr<PointerType>> PointerTypes_;
+    std::vector<std::shared_ptr<FunctionType>> FunctionTypes_;
+    std::vector<std::shared_ptr<ArrayType>> ArrayTypes_;
 
     // if we are porting to some 64-bit machines, we can change these types to
     // 64-bit type, in order to make pointers behave correctly

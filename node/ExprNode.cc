@@ -66,6 +66,17 @@ Value L2RCastingNode::CodeGen() {
     return context_->GetBuilder()->CreateLoad(type_->GetLLVMType(), left);
 }
 
+GetAddressNode::GetAddressNode(Context* context,
+                               std::shared_ptr<ExprNode> lvalue)
+    : ExprNode(context)
+    , lvalue_(lvalue) {}
+
+Value GetAddressNode::CodeGen() {
+    Value left = lvalue_->CodeGen();
+    type_ = context_->GetTypeManager()->GetPointerType(lvalue_->GetType());
+    return left;
+}
+
 IdentifierNode::IdentifierNode(Context* context, const std::string& name)
     : ExprNode(context)
     , name_(name) {}

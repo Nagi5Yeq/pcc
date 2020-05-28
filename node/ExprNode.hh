@@ -60,6 +60,17 @@ class L2RCastingNode : public ExprNode {
     std::shared_ptr<ExprNode> lvalue_;
 };
 
+// like L2RCastingNode, but won't do the load, type is the pointer to lvalue
+// instead.
+class GetAddressNode : public ExprNode {
+  public:
+    GetAddressNode(Context* context, std::shared_ptr<ExprNode> lvalue);
+    virtual Value CodeGen() override;
+
+  protected:
+    std::shared_ptr<ExprNode> lvalue_;
+};
+
 class IdentifierNode : public ExprNode {
   public:
     IdentifierNode(Context* context, const std::string& name);

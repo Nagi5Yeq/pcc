@@ -77,11 +77,15 @@ white           [\t\f\r ]
 "/"         {return Parser::make_REAL_DIV(loc);}
 "div"       {return Parser::make_DIV(loc);}
 "mod"       {return Parser::make_MOD(loc);}
+"^"         {return Parser::make_CARET(loc);}
+"@"         {return Parser::make_AT(loc);}
 
 "and"       {return Parser::make_AND(loc);}
 "not"       {return Parser::make_NOT(loc);}
 "or"        {return Parser::make_OR(loc);}
 "xor"       {return Parser::make_XOR(loc);}
+"shl"       {return Parser::make_SHL(loc);}
+"shr"       {return Parser::make_SHR(loc);}
 
 "<"         {return Parser::make_LT(loc);}
 "<="        {return Parser::make_LE(loc);}

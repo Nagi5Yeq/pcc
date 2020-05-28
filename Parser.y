@@ -45,8 +45,8 @@ YY_DECL;
 %token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION
 %token IF THEN ELSE WHILE DO REPEAT UNTIL
 %token BOOLEAN CHAR INTEGER REAL STRING
-%token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE
-%token AND NOT OR XOR
+%token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE CARET AT
+%token AND NOT OR XOR SHL SHR
 %token INTEGER_LITERAL REAL_LITERAL STRING_LITERAL BOOLEAN_LITERAL CHAR_LITERAL
 
 %type <std::string> IDENTIFIER program_header
@@ -121,11 +121,12 @@ vars
     ;
 
 type
-    : BOOLEAN   {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::BOOLEAN);}
-    | CHAR      {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::CHAR);}
-    | INTEGER   {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::INTEGER);}
-    | REAL      {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::REAL);}
-    | STRING    {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::STRING);}
+    : BOOLEAN       {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::BOOLEAN);}
+    | CHAR          {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::CHAR);}
+    | INTEGER       {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::INTEGER);}
+    | REAL          {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::REAL);}
+    | STRING        {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::STRING);}
+    | CARET type    {$$=ctx->GetTypeManager()->GetPointerType($2);}
     ;
 
 /* ==================[function part]================== */
@@ -213,6 +214,7 @@ l2_expression
 
 l3_expression
     : l4_operator l3_expression             {$$=std::make_shared<pcc::UnaryExprNode>(ctx,$1,$2);}
+    | AT lvalue                             {$$=std::make_shared<pcc::GetAddressNode>(ctx, $2);}
     | standalone_expression                 {$$=$1;}
     ;
 
@@ -236,7 +238,6 @@ l2_operator
     : ADD       {$$=pcc::BinaryOperator::ADD;}
     | SUB       {$$=pcc::BinaryOperator::SUB;}
     | OR        {$$=pcc::BinaryOperator::OR;}
-    | XOR       {$$=pcc::BinaryOperator::XOR;}
     ;
 
 l3_operator
@@ -245,6 +246,9 @@ l3_operator
     | REAL_DIV  {$$=pcc::BinaryOperator::REAL_DIV;}
     | MOD       {$$=pcc::BinaryOperator::MOD;}
     | AND       {$$=pcc::BinaryOperator::AND;}
+    | XOR       {$$=pcc::BinaryOperator::XOR;}
+    | SHL       {$$=pcc::BinaryOperator::SHL;}
+    | SHR       {$$=pcc::BinaryOperator::SHR;}
     ;
 
 l4_operator

@@ -28,6 +28,8 @@ enum class BinaryOperator {
     AND,
     OR,
     XOR,
+    SHL,
+    SHR,
     ARRAY_ACCESS,
     BINARYOP_NUMBER,
     REAL_DIV // the difference between REAL_DIV and DIV is handled in
@@ -74,6 +76,8 @@ class Type {
     Value CreateAnd(Value v0, Value v1, Context* context);
     Value CreateOr(Value v0, Value v1, Context* context);
     Value CreateXor(Value v0, Value v1, Context* context);
+    Value CreateShl(Value v0, Value v1, Context* context);
+    Value CreateShr(Value v0, Value v1, Context* context);
     Value CreatePos(Value v, Context* context);
     Value CreateNeg(Value v, Context* context);
     Value CreateNot(Value v, Context* context);
