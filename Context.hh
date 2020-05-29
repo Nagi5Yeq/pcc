@@ -15,7 +15,7 @@ class Context {
   public:
     Context(const char* name);
     TypeManager* GetTypeManager();
-    VariableList GetGlobals();
+    VariableList* GetGlobals();
     llvm::Module* GetModule();
     llvm::IRBuilder<>* GetBuilder();
     VariableList* GetCurrentScope();

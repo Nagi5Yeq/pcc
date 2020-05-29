@@ -83,7 +83,7 @@ class IdentifierNode : public ExprNode {
 class FunctionCallNode : public ExprNode {
   public:
     FunctionCallNode(Context* context, const std::string& name,
-                     std::list<std::shared_ptr<ExprNode>> args);
+                     std::list<std::shared_ptr<ExprNode>>&& args);
     virtual Value CodeGen() override;
 
   protected:

@@ -161,6 +161,9 @@ Value Type::CreateFNeg(Value v, Context* context) {
     return context->GetBuilder()->CreateFNeg(v);
 }
 
+VoidType::VoidType()
+    : Type("void", llvm::Type::getVoidTy(GlobalLLVMContext)) {}
+
 IntegerBaseType::IntegerBaseType(std::string&& name, int width,
                                  llvm::Type* LLVMType)
     : Type(std::move(name), LLVMType)

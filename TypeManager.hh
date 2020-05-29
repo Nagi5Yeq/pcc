@@ -9,7 +9,15 @@
 #include "Type.hh"
 
 namespace pcc {
-enum class BuiltinType { BOOLEAN, CHAR, INTEGER, REAL, STRING, BUILTIN_NUMBER };
+enum class BuiltinType {
+    VOID,
+    BOOLEAN,
+    CHAR,
+    INTEGER,
+    REAL,
+    STRING,
+    BUILTIN_NUMBER
+};
 class TypeManager {
 
   public:

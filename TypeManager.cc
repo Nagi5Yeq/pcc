@@ -4,8 +4,9 @@
 
 namespace pcc {
 TypeManager::TypeManager()
-    : builtins_{std::make_shared<BooleanType>(), std::make_shared<CharType>(),
-                std::make_shared<IntegerType>(), std::make_shared<RealType>()} {
+    : builtins_{std::make_shared<VoidType>(), std::make_shared<BooleanType>(),
+                std::make_shared<CharType>(), std::make_shared<IntegerType>(),
+                std::make_shared<RealType>()} {
     PointerDifferenceType_ = GetBuiltinType(BuiltinType::INTEGER);
     PointerIndexType_ = GetBuiltinType(BuiltinType::INTEGER);
     builtins_.push_back(

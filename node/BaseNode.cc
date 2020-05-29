@@ -5,19 +5,19 @@ BaseNode::BaseNode(Context* context)
     : context_(context) {}
 
 ProgramNode::ProgramNode(
-    Context* context, const std::string& name,
-    std::list<std::shared_ptr<BaseNode>> GlobalDeclarations,
-    std::list<std::shared_ptr<FunctionNode>> functions)
+    Context* context, std::string&& name,
+    std::list<std::shared_ptr<DeclNode>>&& GlobalDeclarations,
+    std::list<std::shared_ptr<FunctionNode>>&& functions)
     : BaseNode(context)
-    , name_(name)
-    , GlobalDeclarations_(GlobalDeclarations)
-    , functions_(functions) {}
+    , name_(std::move(name))
+    , GlobalDeclarations_(std::move(GlobalDeclarations))
+    , functions_(std::move(functions)) {}
 
 Value ProgramNode::CodeGen() {
-    for (auto decl : GlobalDeclarations_) {
+    for (auto&& decl : GlobalDeclarations_) {
         decl->CodeGen();
     }
-    for (auto function : functions_) {
+    for (auto&& function : functions_) {
         function->CodeGen();
     }
     return nullptr;

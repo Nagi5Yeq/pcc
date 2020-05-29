@@ -44,7 +44,7 @@ YY_DECL;
 %token COLON SEMICOLON COMMA DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
 %token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION
 %token IF THEN ELSE WHILE DO REPEAT UNTIL
-%token BOOLEAN CHAR INTEGER REAL STRING
+%token VOID BOOLEAN CHAR INTEGER REAL STRING
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE CARET AT
 %token AND NOT OR XOR SHL SHR
 %token INTEGER_LITERAL REAL_LITERAL STRING_LITERAL BOOLEAN_LITERAL CHAR_LITERAL
@@ -54,6 +54,8 @@ YY_DECL;
 %type <std::list<Declaration>> var_decls
 %type <std::pair<std::list<std::string>, std::shared_ptr<pcc::Type>>> var_decl
 %type <std::list<std::string>> vars
+%type <std::list<pcc::Constant>> const_decls
+%type <pcc::Constant> const_decl
 
 %type <bool> BOOLEAN_LITERAL
 %type <char> CHAR_LITERAL
@@ -69,8 +71,10 @@ YY_DECL;
 
 %type <std::list<std::shared_ptr<pcc::FunctionNode>>> functions
 %type <std::shared_ptr<pcc::FunctionNode>> function
-%type <std::list<std::shared_ptr<pcc::BaseNode>>> local_decls global_decls
-%type <std::shared_ptr<pcc::BaseNode>> local_decl global_decl
+%type <std::list<std::shared_ptr<pcc::DeclNode>>> decls
+%type <std::shared_ptr<pcc::DeclNode>> decl
+%type <std::shared_ptr<pcc::VarDeclNode>> var_decl_statement
+%type <std::shared_ptr<pcc::ConstDeclNode>> const_decl_statement
 
 %type <std::shared_ptr<pcc::StatementListNode>> statements statement_block
 %type <std::shared_ptr<pcc::BaseNode>> statement open_statement closed_statement normal_statement
@@ -83,20 +87,21 @@ YY_DECL;
 /* ==================[global part]================== */
 
 program
-    : program_header global_decls functions FILE_END {driver.SetRoot(std::make_shared<pcc::ProgramNode>(ctx, $1, $2, $3));}
+    : program_header decls functions FILE_END {driver.SetRoot(std::make_shared<pcc::ProgramNode>(ctx, std::move($1), std::move($2), std::move($3)));}
     ;
 
 program_header
-    : PROGRAM IDENTIFIER SEMICOLON  {$$=$2;}
+    : PROGRAM IDENTIFIER SEMICOLON  {$$=std::move($2);}
     ;
 
-global_decls
-    : global_decls global_decl  {$$=std::move($1); $$.push_back($2);}
-    |                           {$$=std::list<std::shared_ptr<pcc::BaseNode>>();}
+decls
+    : decls decl    {$$=std::move($1); $$.push_back($2);}
+    |               {$$=std::list<std::shared_ptr<pcc::DeclNode>>();}
     ;
 
-global_decl
-    : VAR var_decls SEMICOLON   {$$=std::make_shared<pcc::VarDeclNode>(ctx, nullptr, $2);}
+decl
+    : var_decl_statement    {$$=$1;}
+    | const_decl_statement  {$$=$1;}
     ;
 
 functions
@@ -106,22 +111,40 @@ functions
 
 /* ==================[var part]================== */
 
+var_decl_statement
+    : VAR var_decls SEMICOLON       {$$=std::make_shared<pcc::VarDeclNode>(ctx, nullptr, std::move($2));}
+    ;
+
 var_decls
     : var_decls SEMICOLON var_decl  {$$=std::move($1); auto NewChilds=std::get<0>($3); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($3)});}}
     | var_decl                      {auto NewChilds=std::get<0>($1); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($1)});}}
     ;
 
 var_decl
-    : vars COLON type {$$={$1,$3};}
+    : vars COLON type               {$$={$1, $3};}
     ;
 
 vars
-    : vars COMMA IDENTIFIER {$$=std::move($1); $$.push_back($3);}
-    | IDENTIFIER            {$$.push_back($1);}
+    : vars COMMA IDENTIFIER         {$$=std::move($1); $$.push_back($3);}
+    | IDENTIFIER                    {$$.push_back($1);}
+    ;
+
+const_decl_statement
+    :   CONST const_decls SEMICOLON     {$$=std::make_shared<pcc::ConstDeclNode>(ctx, nullptr, std::move($2));}
+    ;
+
+const_decls
+    : const_decls SEMICOLON const_decl  {$$=std::move($1); $$.push_back($3);}
+    | const_decl                        {$$.push_back($1);}
+    ;
+
+const_decl
+    : IDENTIFIER EQ literal             {$$={$1, $3};}
     ;
 
 type
-    : BOOLEAN       {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::BOOLEAN);}
+    : VOID          {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::VOID);}
+    | BOOLEAN       {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::BOOLEAN);}
     | CHAR          {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::CHAR);}
     | INTEGER       {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::INTEGER);}
     | REAL          {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::REAL);}
@@ -132,19 +155,8 @@ type
 /* ==================[function part]================== */
 
 function
-    : FUNCTION IDENTIFIER LPARENTHESIS var_decls RPARENTHESIS COLON type SEMICOLON
-      local_decls statement_block   {$$=std::make_shared<pcc::FunctionNode>(ctx, $2, $4, $9, $7, $10);}
-    | FUNCTION IDENTIFIER LPARENTHESIS RPARENTHESIS COLON type SEMICOLON
-      local_decls statement_block   {$$=std::make_shared<pcc::FunctionNode>(ctx, $2, std::list<Declaration>(), $8, $6, $9);}
-    ;
-
-local_decls 
-    : local_decls local_decl    {$$=std::move($1); $$.push_back($2);}
-    |                           {$$=std::list<std::shared_ptr<pcc::BaseNode>>();}
-    ;
-
-local_decl
-    : VAR var_decls SEMICOLON   {$$=std::make_shared<pcc::VarDeclNode>(ctx, nullptr, $2);}
+    : FUNCTION IDENTIFIER LPARENTHESIS var_decls RPARENTHESIS COLON type SEMICOLON decls statement_block    {$$=std::make_shared<pcc::FunctionNode>(ctx, std::move($2), std::move($4), std::move($9), $7, $10);}
+    | FUNCTION IDENTIFIER LPARENTHESIS RPARENTHESIS COLON type SEMICOLON decls statement_block              {$$=std::make_shared<pcc::FunctionNode>(ctx, std::move($2), std::list<Declaration>(), std::move($8), $6, $9);}
     ;
 
 /* ==================[statements part]================== */
@@ -264,7 +276,7 @@ lvalue
     ;
 
 function_call
-    : IDENTIFIER LPARENTHESIS arguments RPARENTHESIS    {$$=std::make_shared<pcc::FunctionCallNode>(ctx, $1, $3);}
+    : IDENTIFIER LPARENTHESIS arguments RPARENTHESIS    {$$=std::make_shared<pcc::FunctionCallNode>(ctx, $1, std::move($3));}
     | IDENTIFIER LPARENTHESIS RPARENTHESIS              {$$=std::make_shared<pcc::FunctionCallNode>(ctx, $1, std::list<std::shared_ptr<pcc::ExprNode>>());}
     ;
 

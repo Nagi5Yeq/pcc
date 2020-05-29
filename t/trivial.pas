@@ -1,4 +1,12 @@
 program a;
+const
+    gb=true;
+    gc='a';
+    gi=5;
+    gr=3.1415;
+    gs='nagi';
+var
+    gv:integer;
 
 function arithmetic_test(a:integer;b:char;c:real):integer;
 var
@@ -80,4 +88,29 @@ begin
     end
     until b>5;
     branch_test:=a;
+end;
+
+function name_test_global():integer;
+begin
+    gv:=1;
+    name_test_global:=gv+gb+gc+gi+gr+gs[3];
+end;
+
+function name_test_local():integer;
+const
+    gb=false;
+    gc='A';
+    gi=10;
+    gr=2.71828;
+    gs='Hanjie Wu';
+var
+    gv:integer;
+begin
+    gv:=0;
+    name_test_local:=gv+gb+gc+gi+gr+gs[3];
+end;
+
+function name_test():boolean;
+begin
+    name_test:=name_test_global()<>name_test_local()
 end;

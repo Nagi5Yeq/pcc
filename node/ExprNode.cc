@@ -88,10 +88,10 @@ Value IdentifierNode::CodeGen() {
 }
 
 FunctionCallNode::FunctionCallNode(Context* context, const std::string& name,
-                                   std::list<std::shared_ptr<ExprNode>> args)
+                                   std::list<std::shared_ptr<ExprNode>>&& args)
     : ExprNode(context)
     , name_(name)
-    , args_(args) {}
+    , args_(std::move(args)) {}
 
 Value FunctionCallNode::CodeGen() {
     TypeManager* manager = context_->GetTypeManager();
@@ -107,7 +107,7 @@ Value FunctionCallNode::CodeGen() {
     std::vector<Value> ArgValues(args_.size());
     auto ArgTypeIt = ArgTypes.begin();
     auto ArgValueIt = ArgValues.begin();
-    for (auto arg : args_) {
+    for (auto&& arg : args_) {
         Value argv = arg->CodeGen();
         Value ConvertedArgv =
             manager->CreateCast(*ArgTypeIt, arg->GetType(), argv, context_);

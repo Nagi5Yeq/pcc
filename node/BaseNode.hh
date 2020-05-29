@@ -16,17 +16,18 @@ class BaseNode {
 };
 
 class FunctionNode;
+class DeclNode;
 
 class ProgramNode : public BaseNode {
   public:
-    ProgramNode(Context* context, const std::string& name,
-                std::list<std::shared_ptr<BaseNode>> GlobalDeclarations,
-                std::list<std::shared_ptr<FunctionNode>> functions);
+    ProgramNode(Context* context, std::string&& name,
+                std::list<std::shared_ptr<DeclNode>>&& GlobalDeclarations,
+                std::list<std::shared_ptr<FunctionNode>>&& functions);
     virtual Value CodeGen() override;
 
   protected:
     std::string name_;
-    std::list<std::shared_ptr<BaseNode>> GlobalDeclarations_;
+    std::list<std::shared_ptr<DeclNode>> GlobalDeclarations_;
     std::list<std::shared_ptr<FunctionNode>> functions_;
 };
 } // namespace pcc

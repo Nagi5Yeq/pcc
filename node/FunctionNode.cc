@@ -10,23 +10,18 @@
 
 namespace pcc {
 FunctionNode::FunctionNode(
-    Context* context, std::string name, std::list<Declaration> arguments,
-    std::list<std::shared_ptr<BaseNode>> LocalDeclarations,
+    Context* context, std::string&& name, std::list<Declaration>&& arguments,
+    std::list<std::shared_ptr<DeclNode>>&& LocalDeclarations,
     std::shared_ptr<Type> type, std::shared_ptr<StatementListNode> body)
     : BaseNode(context)
-    , name_(name)
-    , arguments_(arguments)
-    , LocalDeclarations_(LocalDeclarations)
+    , name_(std::move(name))
+    , arguments_(std::move(arguments))
+    , LocalDeclarations_(std::move(LocalDeclarations))
     , type_(type)
     , locals_(context->GetGlobals())
     , body_(body) {
-    for (auto& decl : LocalDeclarations_) {
-        std::shared_ptr<VarDeclNode> VarDecl =
-            std::dynamic_pointer_cast<VarDeclNode>(decl);
-        if (VarDecl != nullptr) {
-            // set the inherited attribute
-            VarDecl->SetScope(&locals_);
-        }
+    for (auto&& decl : LocalDeclarations_) {
+        decl->SetScope(&locals_);
     }
 }
 
@@ -51,13 +46,13 @@ Value FunctionNode::CodeGen() {
     builder->SetInsertPoint(block);
     // alloc arguments
     llvm::Function::arg_iterator ArgIt = function->arg_begin();
-    for (auto& arg : arguments_) {
+    for (auto&& arg : arguments_) {
         Value ArgValue = builder->CreateAlloca(std::get<1>(arg)->GetLLVMType());
         builder->CreateStore(ArgIt++, ArgValue);
         locals_.Add(std::get<0>(arg), {std::get<1>(arg), ArgValue});
     }
     // alloc local variables
-    for (auto& decl : LocalDeclarations_) {
+    for (auto&& decl : LocalDeclarations_) {
         decl->CodeGen();
     }
     // create a variable with the same name as the function for return value

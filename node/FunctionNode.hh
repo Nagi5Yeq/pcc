@@ -10,9 +10,9 @@
 namespace pcc {
 class FunctionNode : public BaseNode {
   public:
-    FunctionNode(Context* context, std::string name,
-                 std::list<Declaration> arguments,
-                 std::list<std::shared_ptr<BaseNode>> LocalDeclarations,
+    FunctionNode(Context* context, std::string&& name,
+                 std::list<Declaration>&& arguments,
+                 std::list<std::shared_ptr<DeclNode>>&& LocalDeclarations,
                  std::shared_ptr<Type> type,
                  std::shared_ptr<StatementListNode> body);
     virtual Value CodeGen() override;
@@ -20,7 +20,7 @@ class FunctionNode : public BaseNode {
   protected:
     std::string name_;
     std::list<Declaration> arguments_;
-    std::list<std::shared_ptr<BaseNode>> LocalDeclarations_;
+    std::list<std::shared_ptr<DeclNode>> LocalDeclarations_;
     std::shared_ptr<Type> type_;
     VariableList locals_;
     std::shared_ptr<StatementListNode> body_;

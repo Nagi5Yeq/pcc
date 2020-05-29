@@ -16,7 +16,7 @@ Context::Context(const char* name)
 
 TypeManager* Context::GetTypeManager() { return &TypeManager_; }
 
-VariableList Context::GetGlobals() { return &globals_; }
+VariableList* Context::GetGlobals() { return &globals_; }
 
 llvm::Module* Context::GetModule() { return &module_; }
 

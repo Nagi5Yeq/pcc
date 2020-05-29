@@ -107,9 +107,10 @@ white           [\t\f\r ]
 "do"        {return Parser::make_DO(loc);}
 "repeat"    {return Parser::make_REPEAT(loc);}
 "until"     {return Parser::make_UNTIL(loc);}
-"integer"   {return Parser::make_INTEGER(loc);}
+"void"      {return Parser::make_VOID(loc);}
 "boolean"   {return Parser::make_BOOLEAN(loc);}
 "char"      {return Parser::make_CHAR(loc);}
+"integer"   {return Parser::make_INTEGER(loc);}
 "real"      {return Parser::make_REAL(loc);}
 "string"    {return Parser::make_STRING(loc);}
 

@@ -100,6 +100,11 @@ class Type {
     llvm::Type* LLVMType_;
 };
 
+class VoidType : public Type {
+  public:
+    VoidType();
+};
+
 class IntegerBaseType : public Type {
   public:
     IntegerBaseType(std::string&& name, int width, llvm::Type* LLVMType);
