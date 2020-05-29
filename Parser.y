@@ -43,7 +43,7 @@ YY_DECL;
 %token FILE_END 0;
 %token COLON SEMICOLON COMMA DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
 %token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION
-%token IF THEN ELSE WHILE DO REPEAT UNTIL
+%token IF THEN ELSE WHILE DO REPEAT UNTIL BREAK CONTINUE
 %token VOID BOOLEAN CHAR INTEGER REAL STRING
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE CARET AT
 %token AND NOT OR XOR SHL SHR
@@ -78,7 +78,6 @@ YY_DECL;
 
 %type <std::shared_ptr<pcc::StatementListNode>> statements statement_block
 %type <std::shared_ptr<pcc::BaseNode>> statement open_statement closed_statement normal_statement
-%type <std::shared_ptr<pcc::EmptyStatementNode>> empty_statement
 %type <std::shared_ptr<pcc::AssignStatementNode>> assign_statement
 %type <std::shared_ptr<pcc::RepeatStatementNode>> repeat_statement
 
@@ -185,26 +184,24 @@ closed_statement
 
 normal_statement
     : statement_block   {$$=$1;}
-    | empty_statement   {$$=$1;}
     | assign_statement  {$$=$1;}
     | repeat_statement  {$$=$1;}
     | expression        {$$=$1;}
+    | BREAK             {$$=std::make_shared<pcc::BreakStatementNode>(ctx);}
+    | CONTINUE          {$$=std::make_shared<pcc::ContinueStatementNode>(ctx);}
+    |                   {$$=std::make_shared<pcc::EmptyStatementNode>(ctx);}
     ;
 
 statement_block
     : BEGINS statements ENDS    {$$=$2;}
     ;
 
-empty_statement
-    :   {$$=std::make_shared<pcc::EmptyStatementNode>(ctx);}
+assign_statement
+    : lvalue ASSIGN expression  {$$=std::make_shared<pcc::AssignStatementNode>(ctx, $1, $3);}
     ;
 
 repeat_statement
     : REPEAT statement UNTIL expression {$$=std::make_shared<pcc::RepeatStatementNode>(ctx, $4, $2);}
-    ;
-
-assign_statement
-    : lvalue ASSIGN expression  {$$=std::make_shared<pcc::AssignStatementNode>(ctx, $1, $3);}
     ;
 
 /* ==================[expression part]================== */

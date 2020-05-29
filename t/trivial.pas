@@ -67,10 +67,11 @@ end;
 
 function branch_test(a:integer):integer;
 var
-    b,c:integer;
+    b,c,d:integer;
 begin
     b:=3;
     c:=0;
+    d:=4;
     if a<b then
         c:=-1
     else
@@ -78,11 +79,31 @@ begin
             c:=1;
     while b>0 do
     begin
-        a:=a*b;
+        while d>0 do
+        begin
+            d:=d-1;
+            if d=3 then
+            begin
+                d:=2;
+                break
+            end;
+            a:=a*d+b;
+        end;
         b:=b-1
     end;
     repeat
     begin
+        repeat
+        begin
+            d:=d+1;
+            if d=3 then
+            begin
+                d:=4;
+                continue;
+            end;
+            a:=a*c+d;
+        end
+        until d>5;
         a:=a*c;
         b:=b+1
     end
@@ -113,4 +134,10 @@ end;
 function name_test():boolean;
 begin
     name_test:=name_test_global()<>name_test_local()
+end;
+
+function void_test():void;
+var
+    a,b:^void;
+begin
 end;

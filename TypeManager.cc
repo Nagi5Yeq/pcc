@@ -11,6 +11,12 @@ TypeManager::TypeManager()
     PointerIndexType_ = GetBuiltinType(BuiltinType::INTEGER);
     builtins_.push_back(
         GetPointerType(GetBuiltinType(BuiltinType::CHAR), "string"));
+    // llvm doesn't have void* type, we use char* instead
+    PointerTypes_.emplace(
+        GetBuiltinType(BuiltinType::VOID),
+        std::make_shared<PointerType>(GetBuiltinType(BuiltinType::CHAR),
+                                      PointerDifferenceType_, PointerIndexType_,
+                                      "^void"));
 }
 
 std::shared_ptr<Type> TypeManager::GetBuiltinType(BuiltinType type) {
@@ -90,7 +96,7 @@ std::pair<std::shared_ptr<Type>, Value>
     std::shared_ptr<Type> CommonType;
     if (op == BinaryOperator::REAL_DIV) {
         // we can only set the CommonType to real for REAL_DIV on builtin types,
-        // for other types, REAL_DIV and DIV are unavaliable.
+        // for other types, REAL_DIV and DIV are unavailable.
         CommonType = builtins_[ToUnderlying(BuiltinType::REAL)];
         op = BinaryOperator::DIV;
     } else if (LeftType != RightType) {

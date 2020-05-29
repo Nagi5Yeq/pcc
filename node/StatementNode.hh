@@ -68,6 +68,18 @@ class RepeatStatementNode : public BaseNode {
     std::shared_ptr<ExprNode> expr_;
     std::shared_ptr<BaseNode> RepeatBody_;
 };
+
+class BreakStatementNode : public BaseNode {
+  public:
+    BreakStatementNode(Context* context);
+    virtual Value CodeGen() override;
+};
+
+class ContinueStatementNode : public BaseNode {
+  public:
+    ContinueStatementNode(Context* context);
+    virtual Value CodeGen() override;
+};
 } // namespace pcc
 
 #endif

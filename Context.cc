@@ -10,7 +10,8 @@ llvm::LLVMContext GlobalLLVMContext;
 
 Context::Context(const char* name)
     : builder_(GlobalLLVMContext)
-    , module_(name, GlobalLLVMContext) {
+    , module_(name, GlobalLLVMContext)
+    , JumpingFlag_(false) {
     scopes_.push(&globals_);
 }
 
@@ -41,4 +42,28 @@ void Context::AddFunctionType(std::string name,
     FuncTypes_.insert({name, type});
 }
 
+void Context::PushBreakDestination(llvm::BasicBlock* dest) {
+    BreakDestinations_.push(dest);
+}
+
+void Context::PopBreakDestination() { BreakDestinations_.pop(); }
+
+llvm::BasicBlock* Context::GetBreakDestination() {
+    return BreakDestinations_.empty() ? nullptr : BreakDestinations_.top();
+}
+
+void Context::PushContinueDestination(llvm::BasicBlock* dest) {
+    ContinueDestinations_.push(dest);
+}
+
+void Context::PopContinueDestination() { ContinueDestinations_.pop(); }
+
+llvm::BasicBlock* Context::GetContinueDestination() {
+    return ContinueDestinations_.empty() ? nullptr
+                                         : ContinueDestinations_.top();
+}
+
+void Context::SetJumpingFlag(bool flag) { JumpingFlag_ = flag; }
+
+bool Context::GetJumpingFlag() { return JumpingFlag_; }
 } // namespace pcc

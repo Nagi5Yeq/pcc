@@ -28,11 +28,12 @@ FunctionNode::FunctionNode(
 Value FunctionNode::CodeGen() {
     llvm::Module* module = context_->GetModule();
     llvm::IRBuilder<>* builder = context_->GetBuilder();
+    TypeManager* manager = context_->GetTypeManager();
     std::vector<std::shared_ptr<Type>> params(arguments_.size());
     std::transform(arguments_.cbegin(), arguments_.cend(), params.begin(),
                    [](const Declaration& decl) { return std::get<1>(decl); });
     std::shared_ptr<FunctionType> type =
-        context_->GetTypeManager()->CreateFunctionType(type_, params);
+        manager->CreateFunctionType(type_, params);
     context_->AddFunctionType(name_, type);
     llvm::FunctionType* LLVMType =
         llvm::cast<llvm::FunctionType>(type->GetLLVMType());
@@ -55,13 +56,21 @@ Value FunctionNode::CodeGen() {
     for (auto&& decl : LocalDeclarations_) {
         decl->CodeGen();
     }
-    // create a variable with the same name as the function for return value
-    Value rv = builder->CreateAlloca(type_->GetLLVMType());
-    locals_.Add(name_, {type_, rv});
+    Value rv = nullptr;
+    bool IsVoid = type_ == manager->GetBuiltinType(BuiltinType::VOID);
+    if (IsVoid == false) {
+        // create a variable with the same name as the function for return value
+        rv = builder->CreateAlloca(type_->GetLLVMType());
+        locals_.Add(name_, {type_, rv});
+    }
     // push the function scope variables
     context_->PushScope(&locals_);
     body_->CodeGen();
-    builder->CreateRet(builder->CreateLoad(type_->GetLLVMType(), rv));
+    if (IsVoid == false) {
+        builder->CreateRet(builder->CreateLoad(type_->GetLLVMType(), rv));
+    } else {
+        builder->CreateRetVoid();
+    }
     context_->PopScope();
     std::string msg;
     llvm::raw_string_ostream MsgStream(msg);

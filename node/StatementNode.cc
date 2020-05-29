@@ -1,4 +1,5 @@
 #include "StatementNode.hh"
+#include "Log.hh"
 
 namespace pcc {
 StatementListNode::StatementListNode(Context* context)
@@ -63,20 +64,33 @@ Value IfStatementNode::CodeGen() {
             llvm::BasicBlock::Create(GlobalLLVMContext, "else");
         builder->CreateCondBr(cond, ThenBlock, ElseBlock);
         builder->SetInsertPoint(ThenBlock);
+        // see Context.hh for detail
+        context_->SetJumpingFlag(false);
         ThenPart_->CodeGen();
-        builder->CreateBr(EndBlock);
+        if (context_->GetJumpingFlag() == false) {
+            builder->CreateBr(EndBlock);
+        }
+        context_->SetJumpingFlag(false);
         body->getBasicBlockList().push_back(ElseBlock);
         builder->SetInsertPoint(ElseBlock);
+        context_->SetJumpingFlag(false);
         ElsePart_->CodeGen();
-        builder->CreateBr(EndBlock);
+        if (context_->GetJumpingFlag() == false) {
+            builder->CreateBr(EndBlock);
+        }
+        context_->SetJumpingFlag(false);
         body->getBasicBlockList().push_back(EndBlock);
         builder->SetInsertPoint(EndBlock);
         return nullptr;
     }
     builder->CreateCondBr(cond, ThenBlock, EndBlock);
     builder->SetInsertPoint(ThenBlock);
+    context_->SetJumpingFlag(false);
     ThenPart_->CodeGen();
-    builder->CreateBr(EndBlock);
+    if (context_->GetJumpingFlag() == false) {
+        builder->CreateBr(EndBlock);
+    }
+    context_->SetJumpingFlag(false);
     body->getBasicBlockList().push_back(EndBlock);
     builder->SetInsertPoint(EndBlock);
     return nullptr;
@@ -108,7 +122,11 @@ Value WhileStatementNode::CodeGen() {
     builder->CreateCondBr(cond, LoopBlock, EndBlock);
     body->getBasicBlockList().push_back(LoopBlock);
     builder->SetInsertPoint(LoopBlock);
+    context_->PushBreakDestination(EndBlock);
+    context_->PushContinueDestination(StartBlock);
     WhileBody_->CodeGen();
+    context_->PopBreakDestination();
+    context_->PopContinueDestination();
     builder->CreateBr(StartBlock);
     body->getBasicBlockList().push_back(EndBlock);
     builder->SetInsertPoint(EndBlock);
@@ -130,16 +148,56 @@ Value RepeatStatementNode::CodeGen() {
     llvm::Function* body = builder->GetInsertBlock()->getParent();
     llvm::BasicBlock* LoopBlock =
         llvm::BasicBlock::Create(GlobalLLVMContext, "loop", body);
+    llvm::BasicBlock* CheckBlock =
+        llvm::BasicBlock::Create(GlobalLLVMContext, "check");
     llvm::BasicBlock* EndBlock =
         llvm::BasicBlock::Create(GlobalLLVMContext, "done");
     builder->CreateBr(LoopBlock);
     builder->SetInsertPoint(LoopBlock);
+    context_->PushBreakDestination(EndBlock);
+    context_->PushContinueDestination(CheckBlock);
     RepeatBody_->CodeGen();
+    context_->PopBreakDestination();
+    context_->PopContinueDestination();
+    builder->CreateBr(CheckBlock);
+    body->getBasicBlockList().push_back(CheckBlock);
+    builder->SetInsertPoint(CheckBlock);
     Value cond = expr_->CodeGen();
     cond = manager->CreateCast(boolean, expr_->GetType(), cond, context_);
     builder->CreateCondBr(cond, EndBlock, LoopBlock);
     body->getBasicBlockList().push_back(EndBlock);
     builder->SetInsertPoint(EndBlock);
+    return nullptr;
+}
+
+BreakStatementNode::BreakStatementNode(Context* context)
+    : BaseNode(context) {}
+
+Value BreakStatementNode::CodeGen() {
+    llvm::IRBuilder<>* builder = context_->GetBuilder();
+    llvm::BasicBlock* dest = context_->GetBreakDestination();
+    if (dest == nullptr) {
+        Log(LogLevel::PCC_ERROR,
+            "break statement not in loop or switch statement");
+        return nullptr;
+    }
+    builder->CreateBr(dest);
+    context_->SetJumpingFlag(true);
+    return nullptr;
+}
+
+ContinueStatementNode::ContinueStatementNode(Context* context)
+    : BaseNode(context) {}
+
+Value ContinueStatementNode::CodeGen() {
+    llvm::IRBuilder<>* builder = context_->GetBuilder();
+    llvm::BasicBlock* dest = context_->GetContinueDestination();
+    if (dest == nullptr) {
+        Log(LogLevel::PCC_ERROR, "continue statement not in loop statement ");
+        return nullptr;
+    }
+    builder->CreateBr(dest);
+    context_->SetJumpingFlag(true);
     return nullptr;
 }
 } // namespace pcc
