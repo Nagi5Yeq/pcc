@@ -62,10 +62,10 @@ YY_DECL;
 %type <int> INTEGER_LITERAL
 %type <float> REAL_LITERAL
 %type <std::vector<char>> STRING_LITERAL
-%type <std::shared_ptr<pcc::ExprNode>> literal lvalue
+%type <std::shared_ptr<pcc::ExprNode>> literal lvalue rvalue standalone
 %type <std::list<std::shared_ptr<pcc::ExprNode>>> arguments
 %type <std::shared_ptr<pcc::FunctionCallNode>> function_call
-%type <std::shared_ptr<pcc::ExprNode>> expression l1_expression l2_expression l3_expression standalone_expression
+%type <std::shared_ptr<pcc::ExprNode>> expression l1_expression l2_expression l3_expression
 %type <pcc::BinaryOperator> l1_operator l2_operator l3_operator
 %type <pcc::UnaryOperator> l4_operator
 
@@ -229,20 +229,24 @@ l2_expression
 l3_expression
     : l4_operator l3_expression             {$$=std::make_shared<pcc::UnaryExprNode>(ctx,$1,$2);}
     | AT lvalue                             {$$=$2;}
-    | standalone_expression                 {$$=$1;}
+    | standalone                            {$$=$1;}
+
+standalone
+    : rvalue                                {$$=$1;}
+    | lvalue                                {$$=std::make_shared<pcc::L2RCastingNode>(ctx, $1);}
     ;
 
-standalone_expression
-    : lvalue                                {$$=std::make_shared<pcc::L2RCastingNode>(ctx, $1);}
-    | function_call                         {$$=$1;}
+rvalue
+    : function_call                         {$$=$1;}
     | literal                               {$$=$1;}
     | LPARENTHESIS expression RPARENTHESIS  {$$=$2;}
     ;
 
 lvalue
-    : IDENTIFIER                                            {$$=std::make_shared<pcc::IdentifierNode>(ctx, $1);}
-    | lvalue LBRACKET expression RBRACKET                   {$$=std::make_shared<pcc::ArrayAccessNode>(ctx, $1, $3);}
-    | standalone_expression DOT IDENTIFIER
+    : IDENTIFIER                            {$$=std::make_shared<pcc::IdentifierNode>(ctx, $1);}
+    | lvalue LBRACKET expression RBRACKET   {$$=std::make_shared<pcc::ArrayAccessNode>(ctx, $1, $3);}
+    | rvalue LBRACKET expression RBRACKET   {$$=std::make_shared<pcc::PointerAccessNode>(ctx, $1, $3);}
+    | standalone DOT IDENTIFIER
     ;
 
 function_call

@@ -64,7 +64,7 @@ end;
 function pointer_test():integer;
 var
     a,b:integer;
-    c:array[0..10] of integer;
+    c:array[0..100] of integer;
     p,q:^integer;
     s:string;
     ps:^char;
@@ -75,6 +75,8 @@ begin
     b:=q-p;
     p[0]:=a;
     q[b]:=a;
+    (p+1)[0]:=a+1;
+    b:=p[0]+p[1];
     s:='testabcd';
     ps:=s+2;
     pointer_test:=b+ps[3];
