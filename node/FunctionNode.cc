@@ -50,7 +50,8 @@ Value FunctionNode::CodeGen() {
     for (auto&& arg : arguments_) {
         Value ArgValue = builder->CreateAlloca(std::get<1>(arg)->GetLLVMType());
         builder->CreateStore(ArgIt++, ArgValue);
-        locals_.Add(std::get<0>(arg), {std::get<1>(arg), ArgValue});
+        locals_.Add(std::get<0>(arg),
+                    {manager->GetPointerType(std::get<1>(arg)), ArgValue});
     }
     // alloc local variables
     for (auto&& decl : LocalDeclarations_) {
@@ -61,7 +62,7 @@ Value FunctionNode::CodeGen() {
     if (IsVoid == false) {
         // create a variable with the same name as the function for return value
         rv = builder->CreateAlloca(ReturnType_->GetLLVMType());
-        locals_.Add(name_, {ReturnType_, rv});
+        locals_.Add(name_, {manager->GetPointerType(ReturnType_), rv});
     }
     // push the function scope variables
     context_->PushScope(&locals_);

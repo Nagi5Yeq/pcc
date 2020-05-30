@@ -58,18 +58,23 @@ begin
         i:=i+1;
         c:=c-1
     end until i>25;
+    array_test:=ai['f']-ac[5];
 end;
 
 function pointer_test():integer;
 var
     a,b:integer;
-    p:^integer;
+    c:array[0..10] of integer;
+    p,q:^integer;
     s:string;
     ps:^char;
 begin
     a:=1;
-    p:=@a;
-    b:=p[0];
+    p:=@c[0];
+    q:=@c[4];
+    b:=q-p;
+    p[0]:=a;
+    q[b]:=a;
     s:='testabcd';
     ps:=s+2;
     pointer_test:=b+ps[3];

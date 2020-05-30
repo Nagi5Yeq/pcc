@@ -228,7 +228,7 @@ l2_expression
 
 l3_expression
     : l4_operator l3_expression             {$$=std::make_shared<pcc::UnaryExprNode>(ctx,$1,$2);}
-    | AT lvalue                             {$$=std::make_shared<pcc::GetAddressNode>(ctx, $2);}
+    | AT lvalue                             {$$=$2;}
     | standalone_expression                 {$$=$1;}
     ;
 
@@ -237,6 +237,30 @@ standalone_expression
     | function_call                         {$$=$1;}
     | literal                               {$$=$1;}
     | LPARENTHESIS expression RPARENTHESIS  {$$=$2;}
+    ;
+
+lvalue
+    : IDENTIFIER                                            {$$=std::make_shared<pcc::IdentifierNode>(ctx, $1);}
+    | lvalue LBRACKET expression RBRACKET                   {$$=std::make_shared<pcc::ArrayAccessNode>(ctx, $1, $3);}
+    | standalone_expression DOT IDENTIFIER
+    ;
+
+function_call
+    : IDENTIFIER LPARENTHESIS arguments RPARENTHESIS    {$$=std::make_shared<pcc::FunctionCallNode>(ctx, $1, std::move($3));}
+    | IDENTIFIER LPARENTHESIS RPARENTHESIS              {$$=std::make_shared<pcc::FunctionCallNode>(ctx, $1, std::list<std::shared_ptr<pcc::ExprNode>>());}
+    ;
+
+arguments
+    : arguments COMMA expression    {$$=std::move($1); $$.push_back($3);}
+    | expression                    {$$.push_back($1);}
+    ;
+
+literal
+    : BOOLEAN_LITERAL   {$$=std::make_shared<pcc::BooleanLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::BOOLEAN), $1);}
+    | CHAR_LITERAL      {$$=std::make_shared<pcc::CharLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::CHAR), $1);}
+    | INTEGER_LITERAL   {$$=std::make_shared<pcc::IntegerLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::INTEGER), $1);}
+    | REAL_LITERAL      {$$=std::make_shared<pcc::RealLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::REAL), $1);}
+    | STRING_LITERAL    {$$=std::make_shared<pcc::StringLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::STRING), $1);}
     ;
 
 l1_operator
@@ -269,30 +293,6 @@ l4_operator
     : NOT   {$$=pcc::UnaryOperator::NOT;}
     | ADD   {$$=pcc::UnaryOperator::POS;}
     | SUB   {$$=pcc::UnaryOperator::NEG;}
-    ;
-
-lvalue
-    : IDENTIFIER                                            {$$=std::make_shared<pcc::IdentifierNode>(ctx, $1);}
-    | standalone_expression LBRACKET expression RBRACKET    {$$=std::make_shared<pcc::BinaryExprNode>(ctx, pcc::BinaryOperator::ARRAY_ACCESS, $1, $3);}
-    | standalone_expression DOT IDENTIFIER
-    ;
-
-function_call
-    : IDENTIFIER LPARENTHESIS arguments RPARENTHESIS    {$$=std::make_shared<pcc::FunctionCallNode>(ctx, $1, std::move($3));}
-    | IDENTIFIER LPARENTHESIS RPARENTHESIS              {$$=std::make_shared<pcc::FunctionCallNode>(ctx, $1, std::list<std::shared_ptr<pcc::ExprNode>>());}
-    ;
-
-arguments
-    : arguments COMMA expression    {$$=std::move($1); $$.push_back($3);}
-    | expression                    {$$.push_back($1);}
-    ;
-
-literal
-    : BOOLEAN_LITERAL   {$$=std::make_shared<pcc::BooleanLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::BOOLEAN), $1);}
-    | CHAR_LITERAL      {$$=std::make_shared<pcc::CharLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::CHAR), $1);}
-    | INTEGER_LITERAL   {$$=std::make_shared<pcc::IntegerLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::INTEGER), $1);}
-    | REAL_LITERAL      {$$=std::make_shared<pcc::RealLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::REAL), $1);}
-    | STRING_LITERAL    {$$=std::make_shared<pcc::StringLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::STRING), $1);}
     ;
 
 %%

@@ -6,8 +6,8 @@
 namespace pcc {
 const char* GetOperatorName(BinaryOperator op) {
     static const char* names[ToUnderlying(BinaryOperator::BINARYOP_NUMBER)] = {
-        "+",  "-", "*",  "/",   "%",  "<",   "<=", ">",
-        ">=", "=", "<>", "and", "or", "xor", "[]"};
+        "+",  "-", "*",  "/",   "%",  "<",   "<=",  ">",
+        ">=", "=", "<>", "and", "or", "xor", "shl", "shr"};
     return names[ToUnderlying(op)];
 }
 
@@ -185,9 +185,7 @@ Value BooleanType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
         &BooleanType::NotAllowed, &BooleanType::CreateEq,
         &BooleanType::CreateNe,   &BooleanType::CreateAnd,
         &BooleanType::CreateOr,   &BooleanType::CreateXor,
-        &BooleanType::CreateShl,  &BooleanType::CreateShr,
-        &BooleanType::NotAllowed,
-    };
+        &BooleanType::CreateShl,  &BooleanType::CreateShr};
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
@@ -211,7 +209,7 @@ Value CharType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
         &CharType::CreateLe,  &CharType::CreateGt,  &CharType::CreateGe,
         &CharType::CreateEq,  &CharType::CreateNe,  &CharType::CreateAnd,
         &CharType::CreateOr,  &CharType::CreateXor, &CharType::CreateShl,
-        &CharType::CreateShr, &CharType::NotAllowed};
+        &CharType::CreateShr};
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
@@ -238,8 +236,7 @@ Value IntegerType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
         &IntegerType::CreateGe,  &IntegerType::CreateEq,
         &IntegerType::CreateNe,  &IntegerType::CreateAnd,
         &IntegerType::CreateOr,  &IntegerType::CreateXor,
-        &IntegerType::CreateShl, &IntegerType::CreateShr,
-        &IntegerType::NotAllowed};
+        &IntegerType::CreateShl, &IntegerType::CreateShr};
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
@@ -264,7 +261,7 @@ Value RealType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
         &RealType::CreateFLe,  &RealType::CreateFGt,  &RealType::CreateFGe,
         &RealType::CreateFEq,  &RealType::CreateFNe,  &RealType::NotAllowed,
         &RealType::NotAllowed, &RealType::NotAllowed, &RealType::NotAllowed,
-        &RealType::NotAllowed, &RealType::NotAllowed};
+        &RealType::NotAllowed};
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
@@ -289,27 +286,8 @@ ArrayType::ArrayType(std::shared_ptr<Type> ElementType, uint64_t ElementNumber,
 
 std::shared_ptr<Type> ArrayType::GetElementType() { return ElementType_; }
 std::shared_ptr<Type> ArrayType::GetIndexType() { return IndexType_; }
-
-Value ArrayType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                       Context* context) {
-    if (op != BinaryOperator::ARRAY_ACCESS) {
-        return NotAllowed(v0, v1, context);
-    }
-    return CreateArrayAccess(v0, v1, context);
-}
-
-Value ArrayType::CreateArrayAccess(Value v0, Value v1, Context* context) {
-    Value Zero = llvm::ConstantInt::get(IndexType_->GetLLVMType(), 0, true);
-    Value indices[2] = {Zero};
-    if (IsZeroStarted_ == false) {
-        indices[1] = IndexType_->CreateBinaryOperation(BinaryOperator::SUB, v1,
-                                                       start_, context);
-    } else {
-        // saves a sub
-        indices[1] = v1;
-    }
-    return context->GetBuilder()->CreateInBoundsGEP(v0, indices);
-}
+bool ArrayType::GetIsZeroStarted() { return IsZeroStarted_; }
+Value ArrayType::GetIndexStart() { return start_; }
 
 PointerType::PointerType(std::shared_ptr<Type> ElementType,
                          std::shared_ptr<Type> DifferenceType,
@@ -330,15 +308,14 @@ Value PointerType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
                                          Context* context) {
     static Value (pcc::PointerType::*operations[ToUnderlying(
         BinaryOperator::BINARYOP_NUMBER)])(Value, Value, Context*) = {
-        &PointerType::NotAllowed,       &PointerType::CreatePointerSub,
-        &PointerType::NotAllowed,       &PointerType::NotAllowed,
-        &PointerType::NotAllowed,       &PointerType::CreateLt,
-        &PointerType::CreateLe,         &PointerType::CreateGt,
-        &PointerType::CreateGe,         &PointerType::CreateEq,
-        &PointerType::CreateNe,         &PointerType::NotAllowed,
-        &PointerType::NotAllowed,       &PointerType::NotAllowed,
-        &PointerType::NotAllowed,       &PointerType::NotAllowed,
-        &PointerType::CreateArrayAccess};
+        &PointerType::NotAllowed, &PointerType::CreatePointerSub,
+        &PointerType::NotAllowed, &PointerType::NotAllowed,
+        &PointerType::NotAllowed, &PointerType::CreateLt,
+        &PointerType::CreateLe,   &PointerType::CreateGt,
+        &PointerType::CreateGe,   &PointerType::CreateEq,
+        &PointerType::CreateNe,   &PointerType::NotAllowed,
+        &PointerType::NotAllowed, &PointerType::NotAllowed,
+        &PointerType::NotAllowed, &PointerType::NotAllowed};
     return (this->*operations[ToUnderlying(op)])(v0, v1, context);
 }
 
@@ -348,10 +325,6 @@ Value PointerType::CreatePointerSub(Value v0, Value v1, Context* context) {
     Value ConvertedV0 = builder->CreatePtrToInt(v0, ResultLLVMType);
     Value ConvertedV1 = builder->CreatePtrToInt(v1, ResultLLVMType);
     return builder->CreateSub(ConvertedV0, ConvertedV1);
-}
-
-Value PointerType::CreateArrayAccess(Value v0, Value v1, Context* context) {
-    return context->GetBuilder()->CreateInBoundsGEP(v0, v1);
 }
 
 FunctionType::FunctionType(std::shared_ptr<Type> ReturnType,

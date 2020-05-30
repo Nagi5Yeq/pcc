@@ -60,15 +60,28 @@ class L2RCastingNode : public ExprNode {
     std::shared_ptr<ExprNode> lvalue_;
 };
 
-// like L2RCastingNode, but won't do the load, type is the pointer to lvalue
-// instead.
-class GetAddressNode : public ExprNode {
+// access an rvalue pointer, this generates one GEP instruction
+class PointerAccessNode : public ExprNode {
   public:
-    GetAddressNode(Context* context, std::shared_ptr<ExprNode> lvalue);
+    PointerAccessNode(Context* context, std::shared_ptr<ExprNode> lhs,
+                      std::shared_ptr<ExprNode> rhs);
     virtual Value CodeGen() override;
 
   protected:
-    std::shared_ptr<ExprNode> lvalue_;
+    std::shared_ptr<ExprNode> lhs_;
+    std::shared_ptr<ExprNode> rhs_;
+};
+
+// access an array or lvalue pointer
+class ArrayAccessNode : public ExprNode {
+  public:
+    ArrayAccessNode(Context* context, std::shared_ptr<ExprNode> lhs,
+                    std::shared_ptr<ExprNode> rhs);
+    virtual Value CodeGen() override;
+
+  protected:
+    std::shared_ptr<ExprNode> lhs_;
+    std::shared_ptr<ExprNode> rhs_;
 };
 
 class IdentifierNode : public ExprNode {

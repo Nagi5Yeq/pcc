@@ -25,6 +25,8 @@ class TypeManager {
   public:
     TypeManager();
     std::shared_ptr<Type> GetBuiltinType(BuiltinType type);
+    std::shared_ptr<Type> GetPointerIndexType_();
+    std::shared_ptr<Type> GetPointerDifferenceType_();
 
     // if call this function twice with the same ElementType, it will return the
     // same shared_ptr to the Type.

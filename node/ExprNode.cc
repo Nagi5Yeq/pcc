@@ -62,19 +62,94 @@ L2RCastingNode::L2RCastingNode(Context* context,
 
 Value L2RCastingNode::CodeGen() {
     Value left = lvalue_->CodeGen();
-    type_ = lvalue_->GetType();
+    std::shared_ptr<PointerType> type =
+        std::dynamic_pointer_cast<PointerType>(lvalue_->GetType());
+    if (type == nullptr) {
+        Log(LogLevel::PCC_ERROR,
+            "type %s is not a valid pointer type, this lvalue can't be loaded",
+            lvalue_->GetType()->GetCommonName());
+    }
+    type_ = type->GetElementType();
     return context_->GetBuilder()->CreateLoad(type_->GetLLVMType(), left);
 }
 
-GetAddressNode::GetAddressNode(Context* context,
-                               std::shared_ptr<ExprNode> lvalue)
+PointerAccessNode::PointerAccessNode(Context* context,
+                                     std::shared_ptr<ExprNode> lhs,
+                                     std::shared_ptr<ExprNode> rhs)
     : ExprNode(context)
-    , lvalue_(lvalue) {}
+    , lhs_(lhs)
+    , rhs_(rhs) {}
 
-Value GetAddressNode::CodeGen() {
-    Value left = lvalue_->CodeGen();
-    type_ = context_->GetTypeManager()->GetPointerType(lvalue_->GetType());
-    return left;
+Value PointerAccessNode::CodeGen() {
+    Value left = lhs_->CodeGen();
+    Value right = rhs_->CodeGen();
+    std::shared_ptr<PointerType> pointer =
+        std::dynamic_pointer_cast<PointerType>(lhs_->GetType());
+    if (pointer == nullptr) {
+        Log(LogLevel::PCC_ERROR,
+            "type %s is not a valid type for pointer access operator[]",
+            lhs_->GetType()->GetCommonName());
+        return nullptr;
+    }
+    Value CastedRight = context_->GetTypeManager()->CreateCast(
+        pointer->GetIndexType(), rhs_->GetType(), right, context_);
+    type_ = pointer;
+    return context_->GetBuilder()->CreateInBoundsGEP(left, CastedRight);
+}
+
+ArrayAccessNode::ArrayAccessNode(Context* context,
+                                 std::shared_ptr<ExprNode> lhs,
+                                 std::shared_ptr<ExprNode> rhs)
+    : ExprNode(context)
+    , lhs_(lhs)
+    , rhs_(rhs) {}
+
+Value ArrayAccessNode::CodeGen() {
+    llvm::IRBuilder<>* builder = context_->GetBuilder();
+    TypeManager* manager = context_->GetTypeManager();
+    Value left = lhs_->CodeGen();
+    Value right = rhs_->CodeGen();
+    std::shared_ptr<PointerType> LeftType =
+        std::dynamic_pointer_cast<PointerType>(lhs_->GetType());
+    std::shared_ptr<Type> RightType = rhs_->GetType();
+    if (LeftType == nullptr) {
+        Log(LogLevel::PCC_ERROR,
+            "type %s is not a valid type for array access operator[]",
+            lhs_->GetType()->GetCommonName());
+        return nullptr;
+    }
+    std::shared_ptr<Type> type = LeftType->GetElementType();
+    std::shared_ptr<ArrayType> array =
+        std::dynamic_pointer_cast<ArrayType>(type);
+    if (array != nullptr) {
+        std::shared_ptr<Type> IndexType = array->GetIndexType();
+        Value indices[2] = {llvm::ConstantInt::get(
+            manager->GetPointerIndexType_()->GetLLVMType(), 0)};
+        if (array->GetIsZeroStarted() == false) {
+            Value ConvertedRight =
+                manager->CreateCast(IndexType, RightType, right, context_);
+            auto AdjustedRight = IndexType->CreateBinaryOperation(
+                BinaryOperator::SUB, right, array->GetIndexStart(), context_);
+            indices[1] = AdjustedRight;
+        } else {
+            indices[1] = right;
+        }
+        type_ = manager->GetPointerType(array->GetElementType());
+        return builder->CreateInBoundsGEP(left, indices);
+    }
+    std::shared_ptr<PointerType> pointer =
+        std::dynamic_pointer_cast<PointerType>(type);
+    if (pointer != nullptr) {
+        Value PointerValue = builder->CreateLoad(pointer->GetLLVMType(), left);
+        Value CastedRight = manager->CreateCast(
+            pointer->GetIndexType(), rhs_->GetType(), right, context_);
+        type_ = pointer;
+        return builder->CreateInBoundsGEP(PointerValue, CastedRight);
+    }
+    Log(LogLevel::PCC_ERROR,
+        "type %s is not a valid lvalue type for array access operator[]",
+        lhs_->GetType()->GetCommonName());
+    return nullptr;
 }
 
 IdentifierNode::IdentifierNode(Context* context, const std::string& name)

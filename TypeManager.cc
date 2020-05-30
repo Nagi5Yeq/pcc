@@ -36,56 +36,41 @@ std::pair<std::shared_ptr<Type>, Value>
         std::dynamic_pointer_cast<IntegerBaseType>(RightType);
     std::shared_ptr<PointerType> LeftPointerType =
         std::dynamic_pointer_cast<PointerType>(LeftType);
+    std::shared_ptr<PointerType> RightPointerType =
+        std::dynamic_pointer_cast<PointerType>(RightType);
     std::shared_ptr<ArrayType> LeftArrayType =
         std::dynamic_pointer_cast<ArrayType>(LeftType);
 
-    // array or pointer access
-    if (op == BinaryOperator::ARRAY_ACCESS) {
-        if (LeftArrayType != nullptr) {
-            if (RightIntegerBaseType == nullptr) {
-                Log(LogLevel::PCC_ERROR,
-                    "cannot access the array %s with a non-integer type %s",
-                    LeftType->GetCommonName(), RightType->GetCommonName());
-                return {nullptr, nullptr};
-            }
-            std::shared_ptr<Type> LeftIndexType = LeftArrayType->GetIndexType();
-            Value CastedInedx =
-                builder->CreateSExtOrTrunc(right, LeftIndexType->GetLLVMType());
-            return {LeftArrayType->GetElementType(),
-                    LeftType->CreateBinaryOperation(op, left, CastedInedx,
-                                                    context)};
+    // add/sub a pointer with a integer
+    if (LeftPointerType != nullptr && RightPointerType == nullptr) {
+        if (op != BinaryOperator::ADD && op != BinaryOperator::SUB) {
+            Log(LogLevel::PCC_ERROR, "unsupported operation %s on %s and %s",
+                GetOperatorName(op), LeftType->GetCommonName(),
+                RightType->GetCommonName());
+            return {nullptr, nullptr};
         }
-        if (LeftPointerType != nullptr) {
-            if (RightIntegerBaseType == nullptr) {
-                Log(LogLevel::PCC_ERROR,
-                    "cannot access the pointer %s with a non-integer type %s",
-                    LeftType->GetCommonName(), RightType->GetCommonName());
-                return {nullptr, nullptr};
-            }
-            Value CastedInedx = builder->CreateSExtOrTrunc(
-                right, PointerIndexType_->GetLLVMType());
-            return {LeftPointerType->GetElementType(),
-                    LeftType->CreateBinaryOperation(op, left, CastedInedx,
-                                                    context)};
+        if (RightIntegerBaseType == nullptr) {
+            Log(LogLevel::PCC_ERROR,
+                "can not add pointer with non-integer type %s",
+                RightType->GetCommonName());
+            return {nullptr, nullptr};
         }
-        Log(LogLevel::PCC_ERROR,
-            "the left operand type %s is not array or pointer",
-            LeftType->GetCommonName());
-        return {nullptr, nullptr};
+        Value CastedInedx =
+            builder->CreateSExtOrTrunc(right, PointerIndexType_->GetLLVMType());
+        return {LeftType, builder->CreateInBoundsGEP(left, CastedInedx)};
     }
 
-    // add/sub a pointer with a integer
-    if (op == BinaryOperator::ADD || op == BinaryOperator::SUB) {
-        if (LeftPointerType != nullptr) {
-            if (RightIntegerBaseType == nullptr) {
-                Log(LogLevel::PCC_ERROR,
-                    "can not add pointer with non-integer type %s");
-                return {nullptr, nullptr};
-            }
-            Value CastedInedx = builder->CreateSExtOrTrunc(
-                right, PointerIndexType_->GetLLVMType());
-            return {LeftType, builder->CreateInBoundsGEP(left, CastedInedx)};
+    // pointer sub case
+    if (LeftPointerType != nullptr && RightPointerType != nullptr &&
+        op == BinaryOperator::SUB) {
+        if (LeftType != RightType) {
+            Log(LogLevel::PCC_ERROR,
+                "cannot sub to pointers of different type");
+            return {nullptr, nullptr};
         }
+        Value result =
+            LeftType->CreateBinaryOperation(op, left, right, context);
+        return {PointerDifferenceType_, result};
     }
 
     // other operations will require the types of left and right are the same.
@@ -241,6 +226,13 @@ std::shared_ptr<FunctionType> TypeManager::CreateFunctionType(
         ReturnType, ArgTypes, ReturnType->GetCommonName() + name + ")");
     FunctionTypes_.push_back(NewType);
     return NewType;
+}
+std::shared_ptr<Type> TypeManager::GetPointerIndexType_() {
+    return PointerIndexType_;
+}
+
+std::shared_ptr<Type> TypeManager::GetPointerDifferenceType_() {
+    return PointerDifferenceType_;
 }
 
 } // namespace pcc

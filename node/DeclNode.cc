@@ -18,11 +18,13 @@ VarDeclNode::VarDeclNode(Context* context, VariableList* scope,
 // are static, while local variables are allocated on stack.
 Value VarDeclNode::CodeGen() {
     llvm::IRBuilder<>* builder = context_->GetBuilder();
+    TypeManager* manager = context_->GetTypeManager();
     if (scope_ != nullptr) {
         for (auto&& decl : decls_) {
             Value value =
                 builder->CreateAlloca(std::get<1>(decl)->GetLLVMType());
-            scope_->Add(std::get<0>(decl), {std::get<1>(decl), value});
+            scope_->Add(std::get<0>(decl),
+                        {manager->GetPointerType(std::get<1>(decl)), value});
         }
         return nullptr;
     }
@@ -32,7 +34,8 @@ Value VarDeclNode::CodeGen() {
         llvm::Constant* value = new llvm::GlobalVariable(
             *context_->GetModule(), std::get<1>(decl)->GetLLVMType(), false,
             llvm::GlobalVariable::PrivateLinkage, nullptr);
-        globals->Add(std::get<0>(decl), {std::get<1>(decl), value});
+        globals->Add(std::get<0>(decl),
+                     {manager->GetPointerType(std::get<1>(decl)), value});
     }
     return nullptr;
 }
@@ -45,6 +48,7 @@ ConstDeclNode::ConstDeclNode(Context* context, VariableList* scope,
 // for constants, we don't need to allocate them on stack, both global and local
 // constants are static.
 Value ConstDeclNode::CodeGen() {
+    TypeManager* manager = context_->GetTypeManager();
     scope_ = (scope_ == nullptr ? context_->GetGlobals() : scope_);
     for (auto&& decl : decls_) {
         std::shared_ptr<ExprNode> ValueNode = std::get<1>(decl);
@@ -54,7 +58,8 @@ Value ConstDeclNode::CodeGen() {
             *context_->GetModule(), type->GetLLVMType(), true,
             llvm::GlobalValue::PrivateLinkage,
             llvm::cast<llvm::Constant>(value));
-        scope_->Add(std::get<0>(decl), {type, constant});
+        scope_->Add(std::get<0>(decl),
+                    {manager->GetPointerType(type), constant});
     }
     return nullptr;
 }

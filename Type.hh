@@ -30,7 +30,6 @@ enum class BinaryOperator {
     XOR,
     SHL,
     SHR,
-    ARRAY_ACCESS,
     BINARYOP_NUMBER,
     REAL_DIV // the difference between REAL_DIV and DIV is handled in
              // TypeManager, thus we don't need to create instruction for this.
@@ -157,12 +156,10 @@ class ArrayType : public Type {
               std::string&& name, bool IsZeroStarted = false);
     std::shared_ptr<Type> GetElementType();
     std::shared_ptr<Type> GetIndexType();
-    virtual Value CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
-                                        Context* context) override;
+    bool GetIsZeroStarted();
+    Value GetIndexStart();
 
   protected:
-    Value CreateArrayAccess(Value v0, Value v1, Context* context);
-
     std::shared_ptr<Type> ElementType_;
     std::shared_ptr<Type> IndexType_;
     bool IsZeroStarted_;
@@ -182,7 +179,6 @@ class PointerType : public Type {
 
   protected:
     Value CreatePointerSub(Value v0, Value v1, Context* context);
-    Value CreateArrayAccess(Value v0, Value v1, Context* context);
     std::shared_ptr<Type> ElementType_;
     std::shared_ptr<Type> DifferenceType_;
     std::shared_ptr<Type> IndexType_;

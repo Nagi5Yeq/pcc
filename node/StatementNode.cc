@@ -32,8 +32,16 @@ AssignStatementNode::AssignStatementNode(Context* context,
 Value AssignStatementNode::CodeGen() {
     Value LeftValue = lhs_->CodeGen();
     Value RightValue = rhs_->CodeGen();
+    std::shared_ptr<PointerType> LeftType =
+        std::dynamic_pointer_cast<PointerType>(lhs_->GetType());
+    if (LeftType == nullptr) {
+        Log(LogLevel::PCC_ERROR,
+            "type %s is not a valid pointer type, can't store anything into "
+            "this lvalue",
+            lhs_->GetType()->GetCommonName());
+    }
     RightValue = context_->GetTypeManager()->CreateCast(
-        lhs_->GetType(), rhs_->GetType(), RightValue, context_);
+        LeftType->GetElementType(), rhs_->GetType(), RightValue, context_);
     context_->GetBuilder()->CreateStore(RightValue, LeftValue);
     return nullptr;
 }
