@@ -95,14 +95,13 @@ FunctionCallNode::FunctionCallNode(Context* context, const std::string& name,
 
 Value FunctionCallNode::CodeGen() {
     TypeManager* manager = context_->GetTypeManager();
-    std::shared_ptr<FunctionType> type = context_->GetFunctionType(name_);
+    Function function = context_->FindFunction(name_);
+    std::shared_ptr<FunctionType> type = std::get<0>(function);
     if (type == nullptr) {
         Log(LogLevel::PCC_ERROR, "call to undefined function %s",
             name_.c_str());
         return nullptr;
     }
-    llvm::FunctionCallee fp = context_->GetModule()->getOrInsertFunction(
-        name_, llvm::cast<llvm::FunctionType>(type->GetLLVMType()));
     const std::vector<std::shared_ptr<Type>>& ArgTypes = type->GetArgTypes();
     std::vector<Value> ArgValues(args_.size());
     auto ArgTypeIt = ArgTypes.begin();
@@ -121,6 +120,6 @@ Value FunctionCallNode::CodeGen() {
         ++ArgTypeIt, ++ArgValueIt;
     }
     type_ = type->GetReturnType();
-    return context_->GetBuilder()->CreateCall(fp, ArgValues);
+    return context_->GetBuilder()->CreateCall(std::get<1>(function), ArgValues);
 }
 } // namespace pcc

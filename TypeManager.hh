@@ -9,6 +9,8 @@
 #include "Type.hh"
 
 namespace pcc {
+class ExprNode;
+
 enum class BuiltinType {
     VOID,
     BOOLEAN,
@@ -24,9 +26,18 @@ class TypeManager {
     TypeManager();
     std::shared_ptr<Type> GetBuiltinType(BuiltinType type);
 
+    // if call this function twice with the same ElementType, it will return the
+    // same shared_ptr to the Type.
     std::shared_ptr<PointerType>
         GetPointerType(std::shared_ptr<Type> ElementType,
                        const char* CustomName = nullptr);
+
+    // array types and function types are considered unique, unless use type
+    // alias, you can't get the same type as previous call to this function.
+    std::shared_ptr<ArrayType>
+        CreateArrayType(std::shared_ptr<Type> ElementType,
+                        std::shared_ptr<ExprNode> start,
+                        std::shared_ptr<ExprNode> end);
 
     std::shared_ptr<FunctionType>
         CreateFunctionType(std::shared_ptr<Type> ReturnType,

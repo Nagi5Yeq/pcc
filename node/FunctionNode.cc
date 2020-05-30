@@ -12,12 +12,12 @@ namespace pcc {
 FunctionNode::FunctionNode(
     Context* context, std::string&& name, std::list<Declaration>&& arguments,
     std::list<std::shared_ptr<DeclNode>>&& LocalDeclarations,
-    std::shared_ptr<Type> type, std::shared_ptr<StatementListNode> body)
+    std::shared_ptr<Type> ReturnType, std::shared_ptr<StatementListNode> body)
     : BaseNode(context)
     , name_(std::move(name))
     , arguments_(std::move(arguments))
     , LocalDeclarations_(std::move(LocalDeclarations))
-    , type_(type)
+    , ReturnType_(ReturnType)
     , locals_(context->GetGlobals())
     , body_(body) {
     for (auto&& decl : LocalDeclarations_) {
@@ -33,13 +33,13 @@ Value FunctionNode::CodeGen() {
     std::transform(arguments_.cbegin(), arguments_.cend(), params.begin(),
                    [](const Declaration& decl) { return std::get<1>(decl); });
     std::shared_ptr<FunctionType> type =
-        manager->CreateFunctionType(type_, params);
-    context_->AddFunctionType(name_, type);
+        manager->CreateFunctionType(ReturnType_, params);
     llvm::FunctionType* LLVMType =
         llvm::cast<llvm::FunctionType>(type->GetLLVMType());
     llvm::Function* function = llvm::Function::Create(
         LLVMType, llvm::GlobalValue::ExternalLinkage, name_, *module);
     function->setCallingConv(llvm::CallingConv::C);
+    context_->AddFunction(name_, {type, function});
     llvm::BasicBlock* block =
         llvm::BasicBlock::Create(GlobalLLVMContext, name_, function);
     Log(LogLevel::PCC_INFO, "generating function %s of type %s", name_.c_str(),
@@ -57,17 +57,17 @@ Value FunctionNode::CodeGen() {
         decl->CodeGen();
     }
     Value rv = nullptr;
-    bool IsVoid = type_ == manager->GetBuiltinType(BuiltinType::VOID);
+    bool IsVoid = ReturnType_ == manager->GetBuiltinType(BuiltinType::VOID);
     if (IsVoid == false) {
         // create a variable with the same name as the function for return value
-        rv = builder->CreateAlloca(type_->GetLLVMType());
-        locals_.Add(name_, {type_, rv});
+        rv = builder->CreateAlloca(ReturnType_->GetLLVMType());
+        locals_.Add(name_, {ReturnType_, rv});
     }
     // push the function scope variables
     context_->PushScope(&locals_);
     body_->CodeGen();
     if (IsVoid == false) {
-        builder->CreateRet(builder->CreateLoad(type_->GetLLVMType(), rv));
+        builder->CreateRet(builder->CreateLoad(ReturnType_->GetLLVMType(), rv));
     } else {
         builder->CreateRetVoid();
     }

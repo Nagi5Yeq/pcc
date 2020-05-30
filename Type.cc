@@ -276,15 +276,16 @@ Value RealType::CreateUnaryOperation(UnaryOperator op, Value v,
     return (this->*operations[ToUnderlying(op)])(v, context);
 }
 
-ArrayType::ArrayType(std::shared_ptr<Type> ElementType, int ElementNumber,
+ArrayType::ArrayType(std::shared_ptr<Type> ElementType, uint64_t ElementNumber,
                      std::shared_ptr<Type> IndexType, Value start, Value end,
-                     std::string&& name)
-    : Type(std::move(name), llvm::ArrayType::get(ElementType->GetLLVMType(),
-                                                 (uint64_t) ElementNumber))
+                     std::string&& name, bool IsZeroStarted)
+    : Type(std::move(name),
+           llvm::ArrayType::get(ElementType->GetLLVMType(), ElementNumber))
     , ElementType_(ElementType)
     , IndexType_(IndexType)
     , start_(start)
-    , end_(end) {}
+    , end_(end)
+    , IsZeroStarted_(IsZeroStarted) {}
 
 std::shared_ptr<Type> ArrayType::GetElementType() { return ElementType_; }
 std::shared_ptr<Type> ArrayType::GetIndexType() { return IndexType_; }
@@ -298,10 +299,15 @@ Value ArrayType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
 }
 
 Value ArrayType::CreateArrayAccess(Value v0, Value v1, Context* context) {
-    Value indices[2] = {
-        llvm::ConstantInt::get(IndexType_->GetLLVMType(), 0, true),
-        IndexType_->CreateBinaryOperation(BinaryOperator::SUB, v1, start_,
-                                          context)};
+    Value Zero = llvm::ConstantInt::get(IndexType_->GetLLVMType(), 0, true);
+    Value indices[2] = {Zero};
+    if (IsZeroStarted_ == false) {
+        indices[1] = IndexType_->CreateBinaryOperation(BinaryOperator::SUB, v1,
+                                                       start_, context);
+    } else {
+        // saves a sub
+        indices[1] = v1;
+    }
     return context->GetBuilder()->CreateInBoundsGEP(v0, indices);
 }
 

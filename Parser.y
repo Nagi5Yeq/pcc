@@ -41,16 +41,16 @@ YY_DECL;
 %define parse.assert
 
 %token FILE_END 0;
-%token COLON SEMICOLON COMMA DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
+%token COLON SEMICOLON COMMA DOTDOT DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
 %token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION
 %token IF THEN ELSE WHILE DO REPEAT UNTIL BREAK CONTINUE
-%token VOID BOOLEAN CHAR INTEGER REAL STRING
+%token VOID BOOLEAN CHAR INTEGER REAL STRING ARRAY OF
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE CARET AT
 %token AND NOT OR XOR SHL SHR
 %token INTEGER_LITERAL REAL_LITERAL STRING_LITERAL BOOLEAN_LITERAL CHAR_LITERAL
 
 %type <std::string> IDENTIFIER program_header
-%type <std::shared_ptr<pcc::Type>> type
+%type <std::shared_ptr<pcc::Type>> type array_type
 %type <std::list<Declaration>> var_decls
 %type <std::pair<std::list<std::string>, std::shared_ptr<pcc::Type>>> var_decl
 %type <std::list<std::string>> vars
@@ -149,6 +149,11 @@ type
     | REAL          {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::REAL);}
     | STRING        {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::STRING);}
     | CARET type    {$$=ctx->GetTypeManager()->GetPointerType($2);}
+    | array_type    {$$=$1;}
+    ;
+
+array_type
+    :   ARRAY LBRACKET literal DOTDOT literal RBRACKET OF type  {$$=ctx->GetTypeManager()->CreateArrayType($8, $3, $5);}
     ;
 
 /* ==================[function part]================== */

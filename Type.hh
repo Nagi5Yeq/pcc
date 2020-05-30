@@ -152,9 +152,9 @@ class RealType : public Type {
 
 class ArrayType : public Type {
   public:
-    ArrayType(std::shared_ptr<Type> ElementType, int ElementNumber,
+    ArrayType(std::shared_ptr<Type> ElementType, uint64_t ElementNumber,
               std::shared_ptr<Type> IndexType, Value start, Value end,
-              std::string&& name);
+              std::string&& name, bool IsZeroStarted = false);
     std::shared_ptr<Type> GetElementType();
     std::shared_ptr<Type> GetIndexType();
     virtual Value CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
@@ -165,6 +165,7 @@ class ArrayType : public Type {
 
     std::shared_ptr<Type> ElementType_;
     std::shared_ptr<Type> IndexType_;
+    bool IsZeroStarted_;
     Value start_, end_;
 };
 

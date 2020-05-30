@@ -33,7 +33,7 @@ hexadecimal     0[xX][0-9a-fA-F]
 integer         {decimal}|{octal}|{hexadecimal}
 
 real_exp        [0-9]*(\.[0-9]*)?[eE]{decimal}
-real_noexp      [0-9]*\.[0-9]*
+real_noexp      [0-9]*\.[0-9]+
 
 real            {real_exp}|{real_noexp}
 
@@ -64,6 +64,7 @@ white           [\t\f\r ]
 ":="        {return Parser::make_ASSIGN(loc);}
 ":"         {return Parser::make_COLON(loc);}
 ";"         {return Parser::make_SEMICOLON(loc);}
+".."        {return Parser::make_DOTDOT(loc);}
 "."         {return Parser::make_DOT(loc);}
 ","         {return Parser::make_COMMA(loc);}
 "["         {return Parser::make_LBRACKET(loc);}
@@ -116,6 +117,8 @@ white           [\t\f\r ]
 "integer"   {return Parser::make_INTEGER(loc);}
 "real"      {return Parser::make_REAL(loc);}
 "string"    {return Parser::make_STRING(loc);}
+"array"     {return Parser::make_ARRAY(loc);}
+"of"        {return Parser::make_OF(loc);}
 
 "true"      {return Parser::make_BOOLEAN_LITERAL(true, loc);}
 "false"     {return Parser::make_BOOLEAN_LITERAL(false, loc);}

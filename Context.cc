@@ -29,17 +29,16 @@ void Context::PushScope(VariableList* scope) { scopes_.push(scope); }
 
 void Context::PopScope() { scopes_.pop(); }
 
-std::shared_ptr<FunctionType> Context::GetFunctionType(std::string name) {
-    decltype(FuncTypes_)::iterator result = FuncTypes_.find(name);
-    if (result == FuncTypes_.end()) {
-        return nullptr;
+Function Context::FindFunction(std::string name) {
+    decltype(Functions_)::iterator result = Functions_.find(name);
+    if (result == Functions_.end()) {
+        return {nullptr, nullptr};
     }
     return std::get<1>(*result);
 }
 
-void Context::AddFunctionType(std::string name,
-                              std::shared_ptr<FunctionType> type) {
-    FuncTypes_.insert({name, type});
+void Context ::AddFunction(std::string name, Function func) {
+    Functions_.emplace(name, func);
 }
 
 void Context::PushBreakDestination(llvm::BasicBlock* dest) {

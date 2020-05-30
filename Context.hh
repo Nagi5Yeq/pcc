@@ -11,6 +11,8 @@
 #include "VariableList.hh"
 
 namespace pcc {
+using Function = std::pair<std::shared_ptr<FunctionType>, llvm::Function*>;
+
 class Context {
   public:
     Context(const char* name);
@@ -21,8 +23,8 @@ class Context {
     VariableList* GetCurrentScope();
     void PushScope(VariableList* scope);
     void PopScope();
-    std::shared_ptr<FunctionType> GetFunctionType(std::string name);
-    void AddFunctionType(std::string name, std::shared_ptr<FunctionType> type);
+    Function FindFunction(std::string name);
+    void AddFunction(std::string name, Function func);
 
     // every time we enter a while, repeat or for statement, we push the
     // destination of break and continue.
@@ -41,7 +43,7 @@ class Context {
     TypeManager TypeManager_;
     VariableList globals_;
     std::stack<VariableList*> scopes_;
-    std::unordered_map<std::string, std::shared_ptr<FunctionType>> FuncTypes_;
+    std::unordered_map<std::string, Function> Functions_;
     std::stack<llvm::BasicBlock*> BreakDestinations_;
     std::stack<llvm::BasicBlock*> ContinueDestinations_;
     // if statments always link then and else block with the endif block, it

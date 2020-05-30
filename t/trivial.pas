@@ -42,6 +42,24 @@ begin
     string_test:=s[b-a]
 end;
 
+function array_test():integer;
+var
+    ai:array['a'..'z'] of integer;
+    ac:array[0..25] of char;
+    i:integer;
+    c:char;
+begin
+    i:=0;
+    c:='z';
+    repeat
+    begin
+        ac[i]:=c;
+        ai[c]:=i;
+        i:=i+1;
+        c:=c-1
+    end until i>25;
+end;
+
 function pointer_test():integer;
 var
     a,b:integer;

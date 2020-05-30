@@ -1,5 +1,6 @@
 #include "TypeManager.hh"
 #include "Context.hh"
+#include "ExprNode.hh"
 #include "Log.hh"
 
 namespace pcc {
@@ -192,6 +193,35 @@ std::shared_ptr<PointerType>
         CustomName == nullptr ? "^" + std::string(ElementType->GetCommonName())
                               : CustomName);
     PointerTypes_.insert({ElementType, NewType});
+    return NewType;
+}
+
+std::shared_ptr<ArrayType>
+    TypeManager::CreateArrayType(std::shared_ptr<Type> ElementType,
+                                 std::shared_ptr<ExprNode> start,
+                                 std::shared_ptr<ExprNode> end) {
+    llvm::Constant* StartValue = llvm::cast<llvm::Constant>(start->CodeGen());
+    llvm::Constant* EndValue = llvm::cast<llvm::Constant>(end->CodeGen());
+    std::shared_ptr<Type> IndexType = start->GetType();
+    if (IndexType != end->GetType()) {
+        Log(LogLevel::PCC_ERROR,
+            "the start and end indices of an array type must be same "
+            "(start=%s, end=%s)",
+            IndexType->GetCommonName(), end->GetType()->GetCommonName());
+        return nullptr;
+    }
+    if (std::dynamic_pointer_cast<IntegerBaseType>(IndexType) == nullptr) {
+        Log(LogLevel::PCC_ERROR,
+            "array index must have a integer-like type (i.e. integer, char)");
+        return nullptr;
+    }
+    uint64_t StartIndex = StartValue->getUniqueInteger().getZExtValue();
+    uint64_t ElementNumber =
+        EndValue->getUniqueInteger().getZExtValue() - StartIndex + 1;
+    std::shared_ptr<ArrayType> NewType = std::make_shared<ArrayType>(
+        ElementType, ElementNumber, IndexType, StartValue, EndValue,
+        std::string(ElementType->GetCommonName()) + "[]", StartIndex == 0);
+    ArrayTypes_.push_back(NewType);
     return NewType;
 }
 
