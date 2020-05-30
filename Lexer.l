@@ -99,8 +99,9 @@ white           [\t\f\r ]
 "end"       {return Parser::make_ENDS(loc);}
 "program"   {return Parser::make_PROGRAM(loc);}
 "function"  {return Parser::make_FUNCTION(loc);}
-"const"     {return Parser::make_CONST(loc);}
 "var"       {return Parser::make_VAR(loc);}
+"const"     {return Parser::make_CONST(loc);}
+"type"      {return Parser::make_TYPE(loc);}
 "if"        {return Parser::make_IF(loc);}
 "then"      {return Parser::make_THEN(loc);}
 "else"      {return Parser::make_ELSE(loc);}

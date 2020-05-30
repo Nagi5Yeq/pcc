@@ -46,6 +46,7 @@ Value StringLiteralNode::CodeGen() {
     GlobalString->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
     Value ZeroIndex =
         llvm::ConstantInt::get(pointer->GetIndexType()->GetLLVMType(), 0, true);
-    return builder->CreateInBoundsGEP(GlobalString, {ZeroIndex, ZeroIndex});
+    Value indices[2] = {ZeroIndex, ZeroIndex};
+    return builder->CreateInBoundsGEP(GlobalString, indices);
 }
 } // namespace pcc

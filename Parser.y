@@ -23,6 +23,7 @@ namespace pcc{
 #include <sstream>
 
 #include "Driver.hh"
+#include "TypeIdentifier.hh"
 #include "Log.hh"
 
 #define YY_DECL                                                                \
@@ -42,7 +43,7 @@ YY_DECL;
 
 %token FILE_END 0;
 %token COLON SEMICOLON COMMA DOTDOT DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
-%token PROGRAM IDENTIFIER CONST VAR BEGINS ENDS FUNCTION
+%token PROGRAM IDENTIFIER VAR CONST TYPE BEGINS ENDS FUNCTION
 %token IF THEN ELSE WHILE DO REPEAT UNTIL BREAK CONTINUE
 %token VOID BOOLEAN CHAR INTEGER REAL STRING ARRAY OF
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE CARET AT
@@ -50,12 +51,15 @@ YY_DECL;
 %token INTEGER_LITERAL REAL_LITERAL STRING_LITERAL BOOLEAN_LITERAL CHAR_LITERAL
 
 %type <std::string> IDENTIFIER program_header
-%type <std::shared_ptr<pcc::Type>> type array_type
-%type <std::list<Declaration>> var_decls
-%type <std::pair<std::list<std::string>, std::shared_ptr<pcc::Type>>> var_decl
+
+%type <std::list<pcc::Declaration>> var_decls
+%type <std::pair<std::list<std::string>, std::shared_ptr<pcc::TypeIdentifier>>> var_decl
 %type <std::list<std::string>> vars
 %type <std::list<pcc::Constant>> const_decls
 %type <pcc::Constant> const_decl
+%type <std::list<pcc::Declaration>> type_decls
+%type <pcc::Declaration> type_decl
+%type <std::shared_ptr<TypeIdentifier>> type array_type
 
 %type <bool> BOOLEAN_LITERAL
 %type <char> CHAR_LITERAL
@@ -75,6 +79,7 @@ YY_DECL;
 %type <std::shared_ptr<pcc::DeclNode>> decl
 %type <std::shared_ptr<pcc::VarDeclNode>> var_decl_statement
 %type <std::shared_ptr<pcc::ConstDeclNode>> const_decl_statement
+%type <std::shared_ptr<pcc::TypeDeclNode>> type_decl_statement
 
 %type <std::shared_ptr<pcc::StatementListNode>> statements statement_block
 %type <std::shared_ptr<pcc::BaseNode>> statement open_statement closed_statement normal_statement
@@ -101,6 +106,7 @@ decls
 decl
     : var_decl_statement    {$$=$1;}
     | const_decl_statement  {$$=$1;}
+    | type_decl_statement   {$$=$1;}
     ;
 
 functions
@@ -129,7 +135,7 @@ vars
     ;
 
 const_decl_statement
-    :   CONST const_decls SEMICOLON     {$$=std::make_shared<pcc::ConstDeclNode>(ctx, nullptr, std::move($2));}
+    : CONST const_decls SEMICOLON       {$$=std::make_shared<pcc::ConstDeclNode>(ctx, nullptr, std::move($2));}
     ;
 
 const_decls
@@ -141,19 +147,33 @@ const_decl
     : IDENTIFIER EQ literal             {$$={$1, $3};}
     ;
 
+type_decl_statement
+    : TYPE type_decls SEMICOLON         {$$=std::make_shared<pcc::TypeDeclNode>(ctx, nullptr, std::move($2));}
+    ;
+
+type_decls
+    : type_decls SEMICOLON type_decl    {$$=std::move($1); $$.push_back($3);}
+    | type_decl                         {$$.push_back($1);}
+    ;
+
+type_decl
+    : IDENTIFIER EQ type                {$$={$1, $3};}
+    ;
+
 type
-    : VOID          {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::VOID);}
-    | BOOLEAN       {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::BOOLEAN);}
-    | CHAR          {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::CHAR);}
-    | INTEGER       {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::INTEGER);}
-    | REAL          {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::REAL);}
-    | STRING        {$$=ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::STRING);}
-    | CARET type    {$$=ctx->GetTypeManager()->GetPointerType($2);}
+    : VOID          {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::VOID));}
+    | BOOLEAN       {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::BOOLEAN));}
+    | CHAR          {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::CHAR));}
+    | INTEGER       {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::INTEGER));}
+    | REAL          {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::REAL));}
+    | STRING        {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::STRING));}
+    | CARET type    {$$=std::make_shared<PointerTypeIdentifier>(ctx, $2);}
     | array_type    {$$=$1;}
+    | IDENTIFIER    {$$=std::make_shared<AliasTypeIdentifier>(ctx, std::move($1));}
     ;
 
 array_type
-    :   ARRAY LBRACKET literal DOTDOT literal RBRACKET OF type  {$$=ctx->GetTypeManager()->CreateArrayType($8, $3, $5);}
+    :   ARRAY LBRACKET literal DOTDOT literal RBRACKET OF type  {$$=std::make_shared<ArrayTypeIdentifier>(ctx, $8, $3, $5);}
     ;
 
 /* ==================[function part]================== */

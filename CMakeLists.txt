@@ -12,6 +12,7 @@ set(PCC_SOURCE
     Log.cc
     main.cc
     Type.cc
+    TypeIdentifier.cc
     TypeManager.cc
     VariableList.cc
     Version.cc)

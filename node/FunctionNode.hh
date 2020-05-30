@@ -13,7 +13,7 @@ class FunctionNode : public BaseNode {
     FunctionNode(Context* context, std::string&& name,
                  std::list<Declaration>&& arguments,
                  std::list<std::shared_ptr<DeclNode>>&& LocalDeclarations,
-                 std::shared_ptr<Type> ReturnType,
+                 std::shared_ptr<TypeIdentifier> ReturnTypeIdentifier,
                  std::shared_ptr<StatementListNode> body);
     virtual Value CodeGen() override;
 
@@ -21,7 +21,7 @@ class FunctionNode : public BaseNode {
     std::string name_;
     std::list<Declaration> arguments_;
     std::list<std::shared_ptr<DeclNode>> LocalDeclarations_;
-    std::shared_ptr<Type> ReturnType_;
+    std::shared_ptr<TypeIdentifier> ReturnTypeIdentifier_;
     VariableList locals_;
     std::shared_ptr<StatementListNode> body_;
 };

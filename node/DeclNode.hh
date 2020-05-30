@@ -42,6 +42,16 @@ class ConstDeclNode : public DeclNode {
   protected:
     std::list<Constant> decls_;
 };
+
+class TypeDeclNode : public DeclNode {
+  public:
+    TypeDeclNode(Context* context, VariableList* scope,
+                 std::list<Declaration>&& decls);
+    virtual Value CodeGen() override;
+
+  protected:
+    std::list<Declaration> decls_;
+};
 } // namespace pcc
 
 #endif // !PCC_DECLNODE_HH

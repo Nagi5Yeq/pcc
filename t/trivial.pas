@@ -169,3 +169,17 @@ var
     a,b:^void;
 begin
 end;
+
+function alias_test():integer;
+type
+    a1=integer;
+    a2=array[0..9] of a1;
+    a3=array[0..9] of a2;
+var
+    i:a1;
+    arr:a3;
+begin
+    i:=4;
+    arr[i][i]:=i;
+    alias_test:=arr[i][i]*i;
+end;

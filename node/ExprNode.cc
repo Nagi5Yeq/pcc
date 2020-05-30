@@ -157,7 +157,7 @@ IdentifierNode::IdentifierNode(Context* context, const std::string& name)
     , name_(name) {}
 
 Value IdentifierNode::CodeGen() {
-    Variable var = context_->GetCurrentScope()->Find(name_);
+    Variable var = context_->GetCurrentScope()->FindVariable(name_);
     type_ = std::get<0>(var);
     return std::get<1>(var);
 }

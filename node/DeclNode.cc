@@ -2,6 +2,7 @@
 
 #include "DeclNode.hh"
 #include "Log.hh"
+#include "TypeIdentifier.hh"
 
 namespace pcc {
 DeclNode::DeclNode(Context* context, VariableList* scope)
@@ -22,23 +23,23 @@ Value VarDeclNode::CodeGen() {
     TypeManager* manager = context_->GetTypeManager();
     if (scope_ != nullptr) {
         for (auto&& decl : decls_) {
-            Value value =
-                builder->CreateAlloca(std::get<1>(decl)->GetLLVMType());
-            scope_->Add(std::get<0>(decl),
-                        {manager->GetPointerType(std::get<1>(decl)), value});
+            std::shared_ptr<Type> type = std::get<1>(decl)->GetType();
+            Value value = builder->CreateAlloca(type->GetLLVMType());
+            scope_->AddVariable(std::get<0>(decl),
+                                {manager->GetPointerType(type), value});
         }
         return nullptr;
     }
     // global variable case
     VariableList* globals = context_->GetGlobals();
     for (auto&& decl : decls_) {
-        std::shared_ptr<Type> type = std::get<1>(decl);
+        std::shared_ptr<Type> type = std::get<1>(decl)->GetType();
         llvm::GlobalValue* value = new llvm::GlobalVariable(
             *context_->GetModule(), type->GetLLVMType(), false,
             llvm::GlobalVariable::PrivateLinkage, type->GetZeroInitializer());
         value->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
-        globals->Add(std::get<0>(decl),
-                     {manager->GetPointerType(std::get<1>(decl)), value});
+        globals->AddVariable(std::get<0>(decl),
+                             {manager->GetPointerType(type), value});
     }
     return nullptr;
 }
@@ -62,10 +63,22 @@ Value ConstDeclNode::CodeGen() {
             llvm::GlobalValue::PrivateLinkage,
             llvm::cast<llvm::Constant>(value));
         constant->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
-        scope_->Add(std::get<0>(decl),
-                    {manager->GetPointerType(type), constant});
+        scope_->AddVariable(std::get<0>(decl),
+                            {manager->GetPointerType(type), constant});
     }
     return nullptr;
 }
 
+TypeDeclNode::TypeDeclNode(Context* context, VariableList* scope,
+                           std::list<Declaration>&& decls)
+    : DeclNode(context, scope)
+    , decls_(std::move(decls)) {}
+
+Value TypeDeclNode::CodeGen() {
+    scope_ = (scope_ == nullptr ? context_->GetGlobals() : scope_);
+    for (auto&& decl : decls_) {
+        scope_->AddTypeAlias(std::get<0>(decl), std::get<1>(decl)->GetType());
+    }
+    return nullptr;
+}
 } // namespace pcc
