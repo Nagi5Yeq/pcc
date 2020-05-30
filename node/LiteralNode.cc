@@ -40,9 +40,10 @@ Value StringLiteralNode::CodeGen() {
         std::static_pointer_cast<PointerType>(type_);
     llvm::Constant* ConstantString =
         llvm::ConstantDataArray::get(GlobalLLVMContext, value_);
-    llvm::Constant* GlobalString = new llvm::GlobalVariable(
+    llvm::GlobalValue* GlobalString = new llvm::GlobalVariable(
         *context_->GetModule(), ConstantString->getType(), true,
         llvm::GlobalValue::PrivateLinkage, ConstantString);
+    GlobalString->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
     Value ZeroIndex =
         llvm::ConstantInt::get(pointer->GetIndexType()->GetLLVMType(), 0, true);
     return builder->CreateInBoundsGEP(GlobalString, {ZeroIndex, ZeroIndex});

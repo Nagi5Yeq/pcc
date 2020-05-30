@@ -6,7 +6,10 @@ const
     gr=3.1415;
     gs='nagi';
 var
-    gv:integer;
+    gvi:integer;
+    gvf:real;
+    gvp:^char;
+    gva:array[0..4] of integer;
 
 function arithmetic_test(a:integer;b:char;c:real):integer;
 var
@@ -138,8 +141,8 @@ end;
 
 function name_test_global():integer;
 begin
-    gv:=1;
-    name_test_global:=gv+gb+gc+gi+gr+gs[3];
+    gvi:=1;
+    name_test_global:=gvi+gb+gc+gi+gr+gs[3];
 end;
 
 function name_test_local():integer;
@@ -150,10 +153,10 @@ const
     gr=2.71828;
     gs='Hanjie Wu';
 var
-    gv:integer;
+    gvi:integer;
 begin
-    gv:=0;
-    name_test_local:=gv+gb+gc+gi+gr+gs[3];
+    gvi:=0;
+    name_test_local:=gvi+gb+gc+gi+gr+gs[3];
 end;
 
 function name_test():boolean;

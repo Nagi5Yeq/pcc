@@ -10,7 +10,7 @@ namespace pcc {
 template <typename T> class LiteralNode : public ExprNode {
   public:
     LiteralNode(Context* context, std::shared_ptr<Type> type, T value);
-    Value CodeGen() override;
+    virtual Value CodeGen() override;
 
   private:
     T value_;
@@ -35,7 +35,7 @@ class StringLiteralNode : public ExprNode {
   public:
     StringLiteralNode(Context* context, std::shared_ptr<Type> type,
                       std::vector<char> value);
-    Value CodeGen() override;
+    virtual Value CodeGen() override;
 
   private:
     std::vector<char> value_;

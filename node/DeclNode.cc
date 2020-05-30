@@ -1,6 +1,7 @@
 #include <llvm/IR/IRBuilder.h>
 
 #include "DeclNode.hh"
+#include "Log.hh"
 
 namespace pcc {
 DeclNode::DeclNode(Context* context, VariableList* scope)
@@ -31,9 +32,11 @@ Value VarDeclNode::CodeGen() {
     // global variable case
     VariableList* globals = context_->GetGlobals();
     for (auto&& decl : decls_) {
-        llvm::Constant* value = new llvm::GlobalVariable(
-            *context_->GetModule(), std::get<1>(decl)->GetLLVMType(), false,
-            llvm::GlobalVariable::PrivateLinkage, nullptr);
+        std::shared_ptr<Type> type = std::get<1>(decl);
+        llvm::GlobalValue* value = new llvm::GlobalVariable(
+            *context_->GetModule(), type->GetLLVMType(), false,
+            llvm::GlobalVariable::PrivateLinkage, type->GetZeroInitializer());
+        value->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
         globals->Add(std::get<0>(decl),
                      {manager->GetPointerType(std::get<1>(decl)), value});
     }
@@ -54,10 +57,11 @@ Value ConstDeclNode::CodeGen() {
         std::shared_ptr<ExprNode> ValueNode = std::get<1>(decl);
         Value value = ValueNode->CodeGen();
         std::shared_ptr<Type> type = ValueNode->GetType();
-        llvm::Constant* constant = new llvm::GlobalVariable(
+        llvm::GlobalValue* constant = new llvm::GlobalVariable(
             *context_->GetModule(), type->GetLLVMType(), true,
             llvm::GlobalValue::PrivateLinkage,
             llvm::cast<llvm::Constant>(value));
+        constant->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
         scope_->Add(std::get<0>(decl),
                     {manager->GetPointerType(type), constant});
     }

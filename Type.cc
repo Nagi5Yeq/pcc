@@ -25,6 +25,10 @@ const char* Type::GetCommonName() { return name_.c_str(); }
 
 llvm::Type* Type::GetLLVMType() { return LLVMType_; }
 
+llvm::Constant* Type::GetZeroInitializer() {
+    return llvm::Constant::getNullValue(LLVMType_);
+}
+
 Value Type::NotAllowed(Value v, Context* context) { return nullptr; }
 Value Type::NotAllowed(Value v0, Value v1, Context* context) { return nullptr; }
 

@@ -56,6 +56,7 @@ class Type {
                                         Context* context);
     virtual Value CreateUnaryOperation(UnaryOperator op, Value v,
                                        Context* context);
+    virtual llvm::Constant* GetZeroInitializer();
 
   protected:
     Value NotAllowed(Value v0, Value v1, Context* context);
