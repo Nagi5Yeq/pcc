@@ -39,6 +39,7 @@ Value AssignStatementNode::CodeGen() {
             "type %s is not a valid pointer type, can't store anything into "
             "this lvalue",
             lhs_->GetType()->GetCommonName());
+        return nullptr;
     }
     RightValue = context_->GetTypeManager()->CreateCast(
         LeftType->GetElementType(), rhs_->GetType(), RightValue, context_);
@@ -132,6 +133,7 @@ Value WhileStatementNode::CodeGen() {
     builder->SetInsertPoint(LoopBlock);
     context_->PushBreakDestination(EndBlock);
     context_->PushContinueDestination(StartBlock);
+    context_->SetJumpingFlag(false);
     WhileBody_->CodeGen();
     context_->PopBreakDestination();
     context_->PopContinueDestination();
@@ -164,6 +166,7 @@ Value RepeatStatementNode::CodeGen() {
     builder->SetInsertPoint(LoopBlock);
     context_->PushBreakDestination(EndBlock);
     context_->PushContinueDestination(CheckBlock);
+    context_->SetJumpingFlag(false);
     RepeatBody_->CodeGen();
     context_->PopBreakDestination();
     context_->PopContinueDestination();
@@ -173,6 +176,89 @@ Value RepeatStatementNode::CodeGen() {
     Value cond = expr_->CodeGen();
     cond = manager->CreateCast(boolean, expr_->GetType(), cond, context_);
     builder->CreateCondBr(cond, EndBlock, LoopBlock);
+    body->getBasicBlockList().push_back(EndBlock);
+    builder->SetInsertPoint(EndBlock);
+    return nullptr;
+}
+
+ForStatementNode::ForStatementNode(Context* context,
+                                   std::shared_ptr<ExprNode> variable,
+                                   std::shared_ptr<ExprNode> start,
+                                   std::shared_ptr<ExprNode> end, bool IsUpward,
+                                   std::shared_ptr<BaseNode> ForBody)
+    : BaseNode(context)
+    , variable_(variable)
+    , start_(start)
+    , end_(end)
+    , IsUpward_(IsUpward)
+    , ForBody_(ForBody) {}
+
+Value ForStatementNode::CodeGen() {
+    llvm::IRBuilder<>* builder = context_->GetBuilder();
+    TypeManager* manager = context_->GetTypeManager();
+    std::shared_ptr<Type> boolean =
+        manager->GetBuiltinType(BuiltinType::BOOLEAN);
+    llvm::Function* body = builder->GetInsertBlock()->getParent();
+    llvm::BasicBlock* StartBlock =
+        llvm::BasicBlock::Create(GlobalLLVMContext, "start", body);
+    llvm::BasicBlock* LoopBlock =
+        llvm::BasicBlock::Create(GlobalLLVMContext, "loop");
+    llvm::BasicBlock* IncrementBlock =
+        llvm::BasicBlock::Create(GlobalLLVMContext, "increment");
+    llvm::BasicBlock* EndBlock =
+        llvm::BasicBlock::Create(GlobalLLVMContext, "done");
+    Value LoopValue = variable_->CodeGen();
+    std::shared_ptr<PointerType> LoopPointer =
+        std::dynamic_pointer_cast<PointerType>(variable_->GetType());
+    if (LoopPointer == nullptr) {
+        Log(LogLevel::PCC_ERROR,
+            "type %s is not a valid pointer type, can't store anything into "
+            "this lvalue",
+            variable_->GetType()->GetCommonName());
+        return nullptr;
+    }
+    std::shared_ptr<IntegerBaseType> LoopType =
+        std::dynamic_pointer_cast<IntegerBaseType>(
+            LoopPointer->GetElementType());
+    if (LoopType == nullptr) {
+        Log(LogLevel::PCC_ERROR,
+            "loop variable should have a integer-like type, not %s",
+            LoopPointer->GetElementType()->GetCommonName());
+        return nullptr;
+    }
+    Value StartValue = start_->CodeGen();
+    StartValue =
+        manager->CreateCast(LoopType, start_->GetType(), StartValue, context_);
+    builder->CreateStore(StartValue, LoopValue);
+    builder->CreateBr(StartBlock);
+    builder->SetInsertPoint(StartBlock);
+    Value EndValue = end_->CodeGen();
+    EndValue =
+        manager->CreateCast(LoopType, end_->GetType(), EndValue, context_);
+    Value LoadedLoopValue =
+        builder->CreateLoad(LoopType->GetLLVMType(), LoopValue);
+    Value cond = builder->CreateICmp(IsUpward_ ? llvm::CmpInst::ICMP_SLE
+                                               : llvm::CmpInst::ICMP_SGE,
+                                     LoadedLoopValue, EndValue);
+    builder->CreateCondBr(cond, LoopBlock, EndBlock);
+    body->getBasicBlockList().push_back(LoopBlock);
+    builder->SetInsertPoint(LoopBlock);
+    context_->PushBreakDestination(EndBlock);
+    context_->PushContinueDestination(IncrementBlock);
+    context_->SetJumpingFlag(false);
+    ForBody_->CodeGen();
+    context_->PopBreakDestination();
+    context_->PopContinueDestination();
+    builder->CreateBr(IncrementBlock);
+    body->getBasicBlockList().push_back(IncrementBlock);
+    builder->SetInsertPoint(IncrementBlock);
+    LoadedLoopValue = builder->CreateLoad(LoopType->GetLLVMType(), LoopValue);
+    Value one = llvm::ConstantInt::get(LoopType->GetLLVMType(), 1);
+    Value NewLoopValue = builder->CreateBinOp(
+        IsUpward_ ? llvm::BinaryOperator::Add : llvm::BinaryOperator::Sub,
+        LoadedLoopValue, one);
+    builder->CreateStore(NewLoopValue, LoopValue);
+    builder->CreateBr(StartBlock);
     body->getBasicBlockList().push_back(EndBlock);
     builder->SetInsertPoint(EndBlock);
     return nullptr;

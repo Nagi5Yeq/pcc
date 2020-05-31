@@ -69,6 +69,22 @@ class RepeatStatementNode : public BaseNode {
     std::shared_ptr<BaseNode> RepeatBody_;
 };
 
+class ForStatementNode : public BaseNode {
+  public:
+    ForStatementNode(Context* context, std::shared_ptr<ExprNode> variable,
+                     std::shared_ptr<ExprNode> start,
+                     std::shared_ptr<ExprNode> end, bool IsUpward,
+                     std::shared_ptr<BaseNode> ForBody);
+    virtual Value CodeGen() override;
+
+  protected:
+    std::shared_ptr<ExprNode> variable_;
+    std::shared_ptr<ExprNode> start_;
+    std::shared_ptr<ExprNode> end_;
+    bool IsUpward_;
+    std::shared_ptr<BaseNode> ForBody_;
+};
+
 class BreakStatementNode : public BaseNode {
   public:
     BreakStatementNode(Context* context);

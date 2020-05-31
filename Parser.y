@@ -44,7 +44,7 @@ YY_DECL;
 %token FILE_END 0;
 %token COLON SEMICOLON COMMA DOTDOT DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
 %token PROGRAM IDENTIFIER VAR CONST TYPE BEGINS ENDS FUNCTION EXTERN DOTDOTDOT
-%token IF THEN ELSE WHILE DO REPEAT UNTIL BREAK CONTINUE
+%token IF THEN ELSE WHILE DO REPEAT UNTIL BREAK CONTINUE FOR TO
 %token VOID BOOLEAN CHAR INTEGER REAL STRING ARRAY OF RECORD
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE CARET AT
 %token AND NOT OR XOR SHL SHR
@@ -61,7 +61,7 @@ YY_DECL;
 %type <pcc::Declaration> type_decl member_decl
 %type <std::shared_ptr<TypeIdentifier>> type array_type record_type
 
-%type <bool> BOOLEAN_LITERAL
+%type <bool> BOOLEAN_LITERAL TO
 %type <char> CHAR_LITERAL
 %type <int> INTEGER_LITERAL
 %type <float> REAL_LITERAL
@@ -213,15 +213,17 @@ statement
     ;
 
 open_statement
-    : IF expression THEN statement                              {$$=std::make_shared<pcc::IfStatementNode>(ctx, $2, $4, nullptr);}
-    | IF expression THEN closed_statement ELSE open_statement   {$$=std::make_shared<pcc::IfStatementNode>(ctx, $2, $4, $6);}
-    | WHILE expression DO open_statement                        {$$=std::make_shared<pcc::WhileStatementNode>(ctx, $2, $4);}
+    : IF expression THEN statement                                      {$$=std::make_shared<pcc::IfStatementNode>(ctx, $2, $4, nullptr);}
+    | IF expression THEN closed_statement ELSE open_statement           {$$=std::make_shared<pcc::IfStatementNode>(ctx, $2, $4, $6);}
+    | WHILE expression DO open_statement                                {$$=std::make_shared<pcc::WhileStatementNode>(ctx, $2, $4);}
+    | FOR lvalue ASSIGN expression TO expression DO open_statement      {$$=std::make_shared<pcc::ForStatementNode>(ctx, $2, $4, $6, $5, $8);}
     ;
 
 closed_statement
-    : normal_statement                                          {$$=$1;}
-    | IF expression THEN closed_statement ELSE closed_statement {$$=std::make_shared<pcc::IfStatementNode>(ctx, $2, $4, $6);}
-    | WHILE expression DO closed_statement                      {$$=std::make_shared<pcc::WhileStatementNode>(ctx, $2, $4);}
+    : normal_statement                                                  {$$=$1;}
+    | IF expression THEN closed_statement ELSE closed_statement         {$$=std::make_shared<pcc::IfStatementNode>(ctx, $2, $4, $6);}
+    | WHILE expression DO closed_statement                              {$$=std::make_shared<pcc::WhileStatementNode>(ctx, $2, $4);}
+    | FOR lvalue ASSIGN expression TO expression DO closed_statement    {$$=std::make_shared<pcc::ForStatementNode>(ctx, $2, $4, $6, $5, $8);}
     ;
 
 normal_statement

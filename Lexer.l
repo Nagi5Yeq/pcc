@@ -111,6 +111,9 @@ white           [\t\f\r ]
 "do"        {return Parser::make_DO(loc);}
 "repeat"    {return Parser::make_REPEAT(loc);}
 "until"     {return Parser::make_UNTIL(loc);}
+"for"       {return Parser::make_FOR(loc);}
+"to"        {return Parser::make_TO(true, loc);}
+"downto"    {return Parser::make_TO(false, loc);}
 "break"     {return Parser::make_BREAK(loc);}
 "continue"  {return Parser::make_CONTINUE(loc);}
 

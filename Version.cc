@@ -29,7 +29,8 @@ PCC_NORETURN void ShowHelp() {
               << "    -v   Verbose mode.\n"
                  "    -vv  Very verbose mode.\n"
                  "    -V   Show version and exit.\n"
-                 "    -h   Show this help and exit."
+                 "    -h   Show this help and exit.\n"
+                 "    -t   Set target's triple."
               << std::endl;
     std::exit(0);
 }

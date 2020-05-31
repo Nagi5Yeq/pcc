@@ -54,5 +54,5 @@ add_definitions(-DPCC_OSNAME="${CMAKE_SYSTEM}")
 add_executable(pcc ${PCC_SOURCE})
 target_include_directories(pcc PRIVATE ${PCC_INCLUDE})
 
-llvm_map_components_to_libnames(llvm_libs support core)
+llvm_map_components_to_libnames(llvm_libs support core x86asmparser x86codegen)
 target_link_libraries(pcc ${llvm_libs})
