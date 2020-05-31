@@ -36,11 +36,9 @@ int main(int argc, char* argv[]) {
         }
     }
     pcc::SetLogLevel(static_cast<pcc::LogLevel>(level));
-    llvm::InitializeAllTargetInfos();
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllTargetMCs();
-    llvm::InitializeAllAsmParsers();
-    llvm::InitializeAllAsmPrinters();
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmParser();
+    llvm::InitializeNativeTargetAsmPrinter();
     if (triple.empty()) {
         triple = llvm::sys::getDefaultTargetTriple();
     }
