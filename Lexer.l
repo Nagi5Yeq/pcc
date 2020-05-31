@@ -11,13 +11,6 @@
 
 using pcc::Parser;
 using pcc::Location;
-
-namespace pcc {
-    char ToLower(char c){
-        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-}
-
 %}
 
 %option nodefault
@@ -165,8 +158,6 @@ comment         {comment1}|{comment2}
 }
 
 {identifier} {
-    char *name = new char[yyleng];
-    std::transform(yytext, yytext+yyleng, name, pcc::ToLower);
     return Parser::make_IDENTIFIER(yytext, loc);
 }
 

@@ -6,4 +6,6 @@ out
 Parser.cc
 Lexer.cc
 Parser.hh
-*.ll
+t/*
+!t/*.pas
+!t/*.c

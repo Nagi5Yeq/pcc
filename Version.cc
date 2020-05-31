@@ -25,12 +25,15 @@ PCC_NORETURN void ShowVersion() {
 
 PCC_NORETURN void ShowHelp() {
     std::cerr << PCC_NAME " version " PCC_VERSION_STRING "\n"
-              << "Usage: " PCC_NAME " [-vVh] file...\n"
-              << "    -v   Verbose mode.\n"
-                 "    -vv  Very verbose mode.\n"
-                 "    -V   Show version and exit.\n"
-                 "    -h   Show this help and exit.\n"
-                 "    -t   Set target's triple."
+              << "Usage: " PCC_NAME " [-vVhiSc] file...\n"
+              << "    -v        Verbose mode.\n"
+              << "    -vv       Very verbose mode.\n"
+              << "    -V        Show version and exit.\n"
+              << "    -h        Show this help and exit.\n"
+              << "    -i        Generate LLVM IR (default behavior).\n"
+              << "    -S        Compile to assembly.\n"
+              << "    -c        Compile to object file.\n"
+              << "    -o <file> Specify output file name."
               << std::endl;
     std::exit(0);
 }

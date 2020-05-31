@@ -161,6 +161,24 @@ Value TypeManager::CreateCast(std::shared_ptr<Type> DstType,
             return builder->CreateSExtOrTrunc(v, DstType->GetLLVMType());
         }
     }
+
+    // array to pointer decay
+    std::shared_ptr<PointerType> SrcPointerType =
+        std::dynamic_pointer_cast<PointerType>(SrcType);
+    std::shared_ptr<PointerType> DstPointerType =
+        std::dynamic_pointer_cast<PointerType>(DstType);
+    if (SrcPointerType != nullptr && DstPointerType != nullptr) {
+        std::shared_ptr<ArrayType> SrcInnerType =
+            std::dynamic_pointer_cast<ArrayType>(
+                SrcPointerType->GetElementType());
+        if (SrcInnerType->GetElementType() ==
+            DstPointerType->GetElementType()) {
+            Value zero =
+                llvm::ConstantInt::get(PointerIndexType_->GetLLVMType(), 0);
+            Value indices[2] = {zero, zero};
+            return builder->CreateInBoundsGEP(v, indices);
+        }
+    }
     Log(LogLevel::PCC_ERROR, "unsupported type casting from %s to %s",
         SrcType->GetCommonName(), DstType->GetCommonName());
     return nullptr;
@@ -214,7 +232,7 @@ std::shared_ptr<ArrayType>
 
 std::shared_ptr<RecordType>
     TypeManager::CreateRecordType(const std::vector<RecordMember>& members) {
-    std::string name = "record {";
+    std::string name = "{";
     std::vector<RecordMember>::const_iterator MemberIt = members.cbegin();
     name.append(std::get<1>(*MemberIt)->GetCommonName());
     for (++MemberIt; MemberIt != members.cend(); ++MemberIt) {

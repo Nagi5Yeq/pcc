@@ -5,7 +5,7 @@
 #include <iostream>
 
 #define PCC_NAME "pcc"
-#define PCC_VERSION_STRING "0.1.0"
+#define PCC_VERSION_STRING "0.1.1"
 
 #ifndef PCC_OSNAME
 #define PCC_OSNAME "unknown platform"

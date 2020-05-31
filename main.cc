@@ -18,8 +18,9 @@
 int main(int argc, char* argv[]) {
     int rv;
     int level = pcc::ToUnderlying(pcc::PCC_WARNING);
-    std::string triple = "";
-    while ((rv = getopt(argc, argv, "vVht:")) != -1) {
+    std::string OutputFileName;
+    enum { IR, ASSEMBLY, OBJECT } CompileType = IR;
+    while ((rv = getopt(argc, argv, "vVhiSco:")) != -1) {
         switch (rv) {
         case 'v':
             level = (level == 0 ? 0 : level - 1);
@@ -28,8 +29,18 @@ int main(int argc, char* argv[]) {
             pcc::ShowVersion();
         case 'h':
             pcc::ShowHelp();
-        case 't':
-            triple = optarg;
+        case 'i':
+            CompileType = IR;
+            break;
+        case 'S':
+            CompileType = ASSEMBLY;
+            break;
+        case 'c':
+            CompileType = OBJECT;
+            break;
+        case 'o':
+            OutputFileName = optarg;
+            break;
         default:
             pcc::Log(pcc::PCC_ERROR, "Unknown option \"%c\".", rv);
             pcc::ShowHelp();
@@ -39,9 +50,7 @@ int main(int argc, char* argv[]) {
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmParser();
     llvm::InitializeNativeTargetAsmPrinter();
-    if (triple.empty()) {
-        triple = llvm::sys::getDefaultTargetTriple();
-    }
+    std::string triple = llvm::sys::getDefaultTargetTriple();
     std::string error;
     const llvm::Target* target =
         llvm::TargetRegistry::lookupTarget(triple, error);
@@ -61,6 +70,11 @@ int main(int argc, char* argv[]) {
         pcc::Log(pcc::PCC_ERROR, "No input file specified");
         return -1;
     }
+    if (!OutputFileName.empty() && optind != argc - 1) {
+        pcc::Log(pcc::LogLevel::PCC_WARNING,
+                 "more than one source file specified, the output file name "
+                 "will be ignored");
+    }
     for (int i = optind; i < argc; i++) {
         pcc::Driver driver(argv[i]);
         llvm::Module* module = driver.GetContext()->GetModule();
@@ -71,16 +85,32 @@ int main(int argc, char* argv[]) {
         if (root != nullptr) {
             root->CodeGen();
         }
-        size_t PostfixPos = filename.rfind(".pas");
-        std::string OutputFileName;
-        if (PostfixPos == std::string::npos) {
-            OutputFileName = filename + ".ll";
-        } else {
-            OutputFileName = filename.substr(0, PostfixPos) + ".ll";
+        if (OutputFileName.empty()) {
+            const char* postfixs[] = {".ll", ".s", ".o"};
+            size_t PostfixPos = filename.rfind(".pas");
+            if (PostfixPos == std::string::npos) {
+                OutputFileName = filename + postfixs[CompileType];
+            } else {
+                OutputFileName =
+                    filename.substr(0, PostfixPos) + postfixs[CompileType];
+            }
         }
         std::error_code ErrorCode;
         llvm::raw_fd_ostream Output(OutputFileName, ErrorCode);
-        driver.GetContext()->GetModule()->print(Output, nullptr);
+        switch (CompileType) {
+        case IR:
+            module->print(Output, nullptr);
+            break;
+        case ASSEMBLY:
+            break;
+        case OBJECT:
+            break;
+        default:
+            break;
+        }
+        pcc::Log(pcc::LogLevel::PCC_INFO, "%s compiled to %s", argv[i],
+                 OutputFileName.c_str());
+        OutputFileName.clear();
     }
     return 0;
 }
