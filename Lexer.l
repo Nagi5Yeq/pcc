@@ -50,6 +50,10 @@ identifier      [a-z_][0-9a-z_]*
 
 white           [\t\f\r ]
 
+comment1        \{((.|[\n\r])*?)\}      
+comment2        \(\*((.|[\n\r])*?)\*\)
+comment         {comment1}|{comment2}
+
 %{
 #define YY_USER_ACTION loc.columns(yyleng);
 %}
@@ -168,6 +172,8 @@ white           [\t\f\r ]
 
 {white}+ {loc.step();}
 \n+      {loc.lines(yyleng); loc.step();}
+
+{comment} {}
 
 . {
     std::cerr<<"ERROR";

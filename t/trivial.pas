@@ -5,11 +5,16 @@ const
     gi=5;
     gr=3.1415;
     gs='nagi';
-var
+var         {this is comment}
     gvi:integer;
     gvf:real;
     gvp:^char;
     gva:array[0..4] of integer;
+
+(* multiline 
+
+
+comments *)
 
 function arithmetic_test(a:integer;b:char;c:real):integer;
 var
