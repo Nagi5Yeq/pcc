@@ -9,8 +9,8 @@
 
 namespace pcc {
 
-// since TypeAlias returns std::shared_ptr<Type> instead of llvm::Value*, we
-// won't use CodeGen() override.
+// since TypeIdentifier returns std::shared_ptr<Type> instead of llvm::Value*,
+// we won't use CodeGen() override.
 class TypeIdentifier {
   public:
     TypeIdentifier(Context* context, std::shared_ptr<Type> type = nullptr);

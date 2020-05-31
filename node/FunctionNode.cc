@@ -91,4 +91,34 @@ Value FunctionNode::CodeGen() {
     return nullptr;
 }
 
+ExternNode::ExternNode(Context* context, std::string&& name,
+                       std::list<Declaration>&& arguments,
+                       std::shared_ptr<TypeIdentifier> ReturnTypeIdentifier,
+                       bool IsVariadic)
+    : FunctionNode(context, std::move(name), std::move(arguments),
+                   std::list<std::shared_ptr<DeclNode>>(), ReturnTypeIdentifier,
+                   nullptr)
+    , IsVariadic_(IsVariadic) {}
+
+Value ExternNode::CodeGen() {
+    llvm::Module* module = context_->GetModule();
+    llvm::IRBuilder<>* builder = context_->GetBuilder();
+    TypeManager* manager = context_->GetTypeManager();
+    std::vector<std::shared_ptr<Type>> params(arguments_.size());
+    std::transform(
+        arguments_.cbegin(), arguments_.cend(), params.begin(),
+        [](const Declaration& decl) { return std::get<1>(decl)->GetType(); });
+    std::shared_ptr<Type> ReturnType = ReturnTypeIdentifier_->GetType();
+    std::shared_ptr<FunctionType> type =
+        manager->CreateFunctionType(ReturnType, params, IsVariadic_);
+    llvm::FunctionType* LLVMType =
+        llvm::cast<llvm::FunctionType>(type->GetLLVMType());
+    llvm::FunctionCallee callee = module->getOrInsertFunction(name_, LLVMType);
+    llvm::Function* function = llvm::cast<llvm::Function>(callee.getCallee());
+    function->setCallingConv(llvm::CallingConv::C);
+    context_->AddFunction(name_, {type, function});
+    Log(LogLevel::PCC_INFO, "extern function %s of type %s", name_.c_str(),
+        type->GetCommonName());
+    return nullptr;
+}
 } // namespace pcc

@@ -189,13 +189,15 @@ class FunctionType : public Type {
   public:
     FunctionType(std::shared_ptr<Type> ReturnType,
                  std::vector<std::shared_ptr<Type>> ArgTypes,
-                 std::string&& name);
+                 std::string&& name, bool IsVariadic = false);
     std::shared_ptr<Type> GetReturnType();
     std::vector<std::shared_ptr<Type>> GetArgTypes();
+    bool IsVariadic();
 
   protected:
     std::shared_ptr<Type> ReturnType_;
     std::vector<std::shared_ptr<Type>> ArgTypes_;
+    bool IsVariadic_;
 };
 
 using RecordMember = std::pair<std::string, std::shared_ptr<Type>>;

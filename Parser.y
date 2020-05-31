@@ -43,7 +43,7 @@ YY_DECL;
 
 %token FILE_END 0;
 %token COLON SEMICOLON COMMA DOTDOT DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
-%token PROGRAM IDENTIFIER VAR CONST TYPE BEGINS ENDS FUNCTION
+%token PROGRAM IDENTIFIER VAR CONST TYPE BEGINS ENDS FUNCTION EXTERN DOTDOTDOT
 %token IF THEN ELSE WHILE DO REPEAT UNTIL BREAK CONTINUE
 %token VOID BOOLEAN CHAR INTEGER REAL STRING ARRAY OF RECORD
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE CARET AT
@@ -174,7 +174,7 @@ type
     ;
 
 array_type
-    :   ARRAY LBRACKET literal DOTDOT literal RBRACKET OF type  {$$=std::make_shared<ArrayTypeIdentifier>(ctx, $8, $3, $5);}
+    : ARRAY LBRACKET literal DOTDOT literal RBRACKET OF type    {$$=std::make_shared<ArrayTypeIdentifier>(ctx, $8, $3, $5);}
     ;
 
 record_type
@@ -195,6 +195,9 @@ member_decl
 function
     : FUNCTION IDENTIFIER LPARENTHESIS var_decls RPARENTHESIS COLON type SEMICOLON decls statement_block    {$$=std::make_shared<pcc::FunctionNode>(ctx, std::move($2), std::move($4), std::move($9), $7, $10);}
     | FUNCTION IDENTIFIER LPARENTHESIS RPARENTHESIS COLON type SEMICOLON decls statement_block              {$$=std::make_shared<pcc::FunctionNode>(ctx, std::move($2), std::list<Declaration>(), std::move($8), $6, $9);}
+    | EXTERN IDENTIFIER LPARENTHESIS var_decls RPARENTHESIS COLON type                                      {$$=std::make_shared<pcc::ExternNode>(ctx, std::move($2), std::move($4), $7, false);}
+    | EXTERN IDENTIFIER LPARENTHESIS RPARENTHESIS COLON type                                                {$$=std::make_shared<pcc::ExternNode>(ctx, std::move($2), std::list<Declaration>(), $6, false);}
+    | EXTERN IDENTIFIER LPARENTHESIS var_decls COMMA DOTDOTDOT RPARENTHESIS COLON type                      {$$=std::make_shared<pcc::ExternNode>(ctx, std::move($2), std::move($4), $9, true);}
     ;
 
 /* ==================[statements part]================== */

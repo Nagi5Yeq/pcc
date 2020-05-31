@@ -46,7 +46,7 @@ char_value      {trival_char}|{escaped_char}|{hex_char}|{oct_char}|\\'
 char            '{char_value}'
 string          '{char_value}+'
 
-identifier      [a-z][0-9a-z_]*
+identifier      [a-z_][0-9a-z_]*
 
 white           [\t\f\r ]
 
@@ -64,6 +64,7 @@ white           [\t\f\r ]
 ":="        {return Parser::make_ASSIGN(loc);}
 ":"         {return Parser::make_COLON(loc);}
 ";"         {return Parser::make_SEMICOLON(loc);}
+"..."       {return Parser::make_DOTDOTDOT(loc);}
 ".."        {return Parser::make_DOTDOT(loc);}
 "."         {return Parser::make_DOT(loc);}
 ","         {return Parser::make_COMMA(loc);}
@@ -99,6 +100,7 @@ white           [\t\f\r ]
 "end"       {return Parser::make_ENDS(loc);}
 "program"   {return Parser::make_PROGRAM(loc);}
 "function"  {return Parser::make_FUNCTION(loc);}
+"extern"    {return Parser::make_EXTERN(loc);}
 "var"       {return Parser::make_VAR(loc);}
 "const"     {return Parser::make_CONST(loc);}
 "type"      {return Parser::make_TYPE(loc);}

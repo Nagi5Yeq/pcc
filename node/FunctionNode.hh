@@ -25,6 +25,18 @@ class FunctionNode : public BaseNode {
     VariableList locals_;
     std::shared_ptr<StatementListNode> body_;
 };
+
+class ExternNode : public FunctionNode {
+  public:
+    ExternNode(Context* context, std::string&& name,
+               std::list<Declaration>&& arguments,
+               std::shared_ptr<TypeIdentifier> ReturnTypeIdentifier,
+               bool IsVariadic);
+    virtual Value CodeGen() override;
+
+  protected:
+    bool IsVariadic_;
+};
 } // namespace pcc
 
 #endif

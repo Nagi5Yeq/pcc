@@ -334,16 +334,17 @@ Value PointerType::CreatePointerSub(Value v0, Value v1, Context* context) {
 
 FunctionType::FunctionType(std::shared_ptr<Type> ReturnType,
                            std::vector<std::shared_ptr<Type>> ArgTypes,
-                           std::string&& name)
+                           std::string&& name, bool IsVariadic)
     : Type(std::move(name), nullptr)
     , ReturnType_(ReturnType)
-    , ArgTypes_(ArgTypes) {
+    , ArgTypes_(ArgTypes)
+    , IsVariadic_(IsVariadic) {
     std::vector<llvm::Type*> params(ArgTypes_.size());
     std::transform(
         ArgTypes_.cbegin(), ArgTypes_.cend(), params.begin(),
         [](std::shared_ptr<Type> decl) { return decl->GetLLVMType(); });
-    LLVMType_ =
-        llvm::FunctionType::get(ReturnType_->GetLLVMType(), params, false);
+    LLVMType_ = llvm::FunctionType::get(ReturnType_->GetLLVMType(), params,
+                                        IsVariadic_);
 }
 
 std::shared_ptr<Type> FunctionType::GetReturnType() { return ReturnType_; }
@@ -351,6 +352,8 @@ std::shared_ptr<Type> FunctionType::GetReturnType() { return ReturnType_; }
 std::vector<std::shared_ptr<Type>> FunctionType::GetArgTypes() {
     return ArgTypes_;
 }
+
+bool FunctionType::IsVariadic() { return IsVariadic_; }
 
 RecordType::RecordType(const std::vector<RecordMember>& members,
                        std::string&& name)

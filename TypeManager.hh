@@ -25,8 +25,8 @@ class TypeManager {
   public:
     TypeManager();
     std::shared_ptr<Type> GetBuiltinType(BuiltinType type);
-    std::shared_ptr<Type> GetPointerIndexType_();
-    std::shared_ptr<Type> GetPointerDifferenceType_();
+    std::shared_ptr<Type> GetPointerIndexType();
+    std::shared_ptr<Type> GetPointerDifferenceType();
 
     // if call this function twice with the same ElementType, it will return the
     // same shared_ptr to the Type.
@@ -46,7 +46,8 @@ class TypeManager {
 
     std::shared_ptr<FunctionType>
         CreateFunctionType(std::shared_ptr<Type> ReturnType,
-                           std::vector<std::shared_ptr<Type>> ArgTypes);
+                           std::vector<std::shared_ptr<Type>> ArgTypes,
+                           bool IsVariadic = false);
 
     // binary operators may change type
     std::pair<std::shared_ptr<Type>, Value>

@@ -124,7 +124,7 @@ Value ArrayAccessNode::CodeGen() {
     if (array != nullptr) {
         std::shared_ptr<Type> IndexType = array->GetIndexType();
         Value indices[2] = {llvm::ConstantInt::get(
-            manager->GetPointerIndexType_()->GetLLVMType(), 0)};
+            manager->GetPointerIndexType()->GetLLVMType(), 0)};
         if (array->GetIsZeroStarted() == false) {
             Value ConvertedRight =
                 manager->CreateCast(IndexType, RightType, right, context_);
@@ -167,7 +167,7 @@ Value DereferenceNode::CodeGen() {
         return nullptr;
     }
     Value zero = llvm::ConstantInt::get(
-        context_->GetTypeManager()->GetPointerIndexType_()->GetLLVMType(), 0);
+        context_->GetTypeManager()->GetPointerIndexType()->GetLLVMType(), 0);
     type_ = pointer;
     return context_->GetBuilder()->CreateInBoundsGEP(value, zero);
 }
@@ -201,7 +201,7 @@ Value MemberAccessNode::CodeGen() {
     int MemberIndex;
     std::shared_ptr<Type> MemberType;
     std::tie(MemberIndex, MemberType) = LeftInner->GetMember(rhs_);
-    llvm::Type* IndexLLLVMType = manager->GetPointerIndexType_()->GetLLVMType();
+    llvm::Type* IndexLLLVMType = manager->GetPointerIndexType()->GetLLVMType();
     Value indices[2] = {llvm::ConstantInt::get(IndexLLLVMType, 0),
                         llvm::ConstantInt::get(IndexLLLVMType, MemberIndex)};
     type_ = manager->GetPointerType(MemberType);
@@ -234,21 +234,31 @@ Value FunctionCallNode::CodeGen() {
         return nullptr;
     }
     const std::vector<std::shared_ptr<Type>>& ArgTypes = type->GetArgTypes();
+    if (type->IsVariadic() == false && ArgTypes.size() != args_.size()) {
+        Log(LogLevel ::PCC_ERROR,
+            "argument number mismatch, %d wanted, %d given", ArgTypes.size(),
+            args_.size());
+        return nullptr;
+    }
     std::vector<Value> ArgValues(args_.size());
-    auto ArgTypeIt = ArgTypes.begin();
+    auto ArgIt = args_.begin();
     auto ArgValueIt = ArgValues.begin();
-    for (auto&& arg : args_) {
-        Value argv = arg->CodeGen();
+    for (auto&& ArgType : ArgTypes) {
+        Value argv = (*ArgIt)->CodeGen();
         Value ConvertedArgv =
-            manager->CreateCast(*ArgTypeIt, arg->GetType(), argv, context_);
+            manager->CreateCast(ArgType, (*ArgIt)->GetType(), argv, context_);
         if (ConvertedArgv == nullptr) {
             Log(LogLevel ::PCC_ERROR,
                 "argument type mismatch, the function type is %s, an argument "
                 "of type %s needed",
-                type->GetCommonName(), (*ArgTypeIt)->GetCommonName());
+                type->GetCommonName(), ArgType->GetCommonName());
         }
         *ArgValueIt = ConvertedArgv;
-        ++ArgTypeIt, ++ArgValueIt;
+        ++ArgIt, ++ArgValueIt;
+    }
+    while (ArgIt != args_.end()) {
+        *ArgValueIt = (*ArgIt)->CodeGen();
+        ++ArgIt, ++ArgValueIt;
     }
     type_ = type->GetReturnType();
     return context_->GetBuilder()->CreateCall(std::get<1>(function), ArgValues);

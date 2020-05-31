@@ -227,9 +227,10 @@ std::shared_ptr<RecordType>
     return NewType;
 }
 
-std::shared_ptr<FunctionType> TypeManager::CreateFunctionType(
-    std::shared_ptr<Type> ReturnType,
-    std::vector<std::shared_ptr<Type>> ArgTypes) {
+std::shared_ptr<FunctionType>
+    TypeManager::CreateFunctionType(std::shared_ptr<Type> ReturnType,
+                                    std::vector<std::shared_ptr<Type>> ArgTypes,
+                                    bool IsVariadic) {
     decltype(ArgTypes)::const_iterator ArgIt = ArgTypes.cbegin();
     std::string name = " (*)(";
     if (!ArgTypes.empty()) {
@@ -240,15 +241,16 @@ std::shared_ptr<FunctionType> TypeManager::CreateFunctionType(
         }
     }
     std::shared_ptr<FunctionType> NewType = std::make_shared<FunctionType>(
-        ReturnType, ArgTypes, ReturnType->GetCommonName() + name + ")");
+        ReturnType, ArgTypes, ReturnType->GetCommonName() + name + ")",
+        IsVariadic);
     FunctionTypes_.push_back(NewType);
     return NewType;
 }
-std::shared_ptr<Type> TypeManager::GetPointerIndexType_() {
+std::shared_ptr<Type> TypeManager::GetPointerIndexType() {
     return PointerIndexType_;
 }
 
-std::shared_ptr<Type> TypeManager::GetPointerDifferenceType_() {
+std::shared_ptr<Type> TypeManager::GetPointerDifferenceType() {
     return PointerDifferenceType_;
 }
 

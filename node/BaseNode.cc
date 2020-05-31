@@ -14,6 +14,7 @@ ProgramNode::ProgramNode(
     , functions_(std::move(functions)) {}
 
 Value ProgramNode::CodeGen() {
+    context_->GetModule()->setModuleIdentifier(name_);
     for (auto&& decl : GlobalDeclarations_) {
         decl->CodeGen();
     }
