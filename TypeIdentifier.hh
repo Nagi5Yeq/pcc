@@ -1,8 +1,11 @@
 #ifndef PCC_TYPEIDENTIFIER_HH
 #define PCC_TYPEIDENTIFIER_HH
 
+#include <list>
+
 #include "Context.hh"
 #include "Type.hh"
+#include "VariableList.hh"
 
 namespace pcc {
 
@@ -56,6 +59,15 @@ class ArrayTypeIdentifier : public TypeIdentifier {
     std::shared_ptr<TypeIdentifier> ElementType_;
     std::shared_ptr<ExprNode> start_;
     std::shared_ptr<ExprNode> end_;
+};
+
+class RecordTypeIdentifier : public TypeIdentifier {
+  public:
+    RecordTypeIdentifier(Context* context, std::list<Declaration>&& members);
+    virtual std::shared_ptr<Type> GetType() override;
+
+  protected:
+    std::list<Declaration> members_;
 };
 } // namespace pcc
 

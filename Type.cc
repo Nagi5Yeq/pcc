@@ -1,6 +1,7 @@
 #include <llvm/IR/InstrTypes.h>
 
 #include "Context.hh"
+#include "Log.hh"
 #include "Type.hh"
 
 namespace pcc {
@@ -349,5 +350,31 @@ std::shared_ptr<Type> FunctionType::GetReturnType() { return ReturnType_; }
 
 std::vector<std::shared_ptr<Type>> FunctionType::GetArgTypes() {
     return ArgTypes_;
+}
+
+RecordType::RecordType(const std::vector<RecordMember>& members,
+                       std::string&& name)
+    : Type(std::move(name), nullptr) {
+    int i = 0;
+    for (auto&& member : members) {
+        members_.insert({std::get<0>(member), {i++, std::get<1>(member)}});
+    }
+    std::vector<llvm::Type*> MemberTypes(members.size());
+    std::transform(
+        members.cbegin(), members.cend(), MemberTypes.begin(),
+        [](const std::pair<std::string, std::shared_ptr<Type>>& member) {
+            return std::get<1>(member)->GetLLVMType();
+        });
+    LLVMType_ = llvm::StructType::create(MemberTypes, "record", false);
+}
+
+std::pair<int, std::shared_ptr<Type>>
+    RecordType::GetMember(const std::string& name) {
+    decltype(members_.end()) result = members_.find(name);
+    if (result == members_.end()) {
+        Log(LogLevel::PCC_ERROR, "the member %s doesn't exist", name.c_str());
+        return {0, nullptr};
+    }
+    return std::get<1>(*result);
 }
 } // namespace pcc

@@ -45,7 +45,7 @@ YY_DECL;
 %token COLON SEMICOLON COMMA DOTDOT DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
 %token PROGRAM IDENTIFIER VAR CONST TYPE BEGINS ENDS FUNCTION
 %token IF THEN ELSE WHILE DO REPEAT UNTIL BREAK CONTINUE
-%token VOID BOOLEAN CHAR INTEGER REAL STRING ARRAY OF
+%token VOID BOOLEAN CHAR INTEGER REAL STRING ARRAY OF RECORD
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE CARET AT
 %token AND NOT OR XOR SHL SHR
 %token INTEGER_LITERAL REAL_LITERAL STRING_LITERAL BOOLEAN_LITERAL CHAR_LITERAL
@@ -57,9 +57,9 @@ YY_DECL;
 %type <std::list<std::string>> vars
 %type <std::list<pcc::Constant>> const_decls
 %type <pcc::Constant> const_decl
-%type <std::list<pcc::Declaration>> type_decls
-%type <pcc::Declaration> type_decl
-%type <std::shared_ptr<TypeIdentifier>> type array_type
+%type <std::list<pcc::Declaration>> type_decls member_decls
+%type <pcc::Declaration> type_decl member_decl
+%type <std::shared_ptr<TypeIdentifier>> type array_type record_type
 
 %type <bool> BOOLEAN_LITERAL
 %type <char> CHAR_LITERAL
@@ -169,11 +169,25 @@ type
     | STRING        {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::STRING));}
     | CARET type    {$$=std::make_shared<PointerTypeIdentifier>(ctx, $2);}
     | array_type    {$$=$1;}
+    | record_type   {$$=$1;}
     | IDENTIFIER    {$$=std::make_shared<AliasTypeIdentifier>(ctx, std::move($1));}
     ;
 
 array_type
     :   ARRAY LBRACKET literal DOTDOT literal RBRACKET OF type  {$$=std::make_shared<ArrayTypeIdentifier>(ctx, $8, $3, $5);}
+    ;
+
+record_type
+    : RECORD member_decls ENDS              {$$=std::make_shared<pcc::RecordTypeIdentifier>(ctx, std::move($2));}
+    ;
+
+member_decls
+    : member_decls SEMICOLON member_decl    {$$=std::move($1); $$.push_back($3);}
+    | member_decl                           {$$.push_back($1);}
+    ;
+
+member_decl
+    : IDENTIFIER COLON type                 {$$={$1, $3};}
     ;
 
 /* ==================[function part]================== */
@@ -266,7 +280,8 @@ lvalue
     : IDENTIFIER                            {$$=std::make_shared<pcc::IdentifierNode>(ctx, $1);}
     | lvalue LBRACKET expression RBRACKET   {$$=std::make_shared<pcc::ArrayAccessNode>(ctx, $1, $3);}
     | rvalue LBRACKET expression RBRACKET   {$$=std::make_shared<pcc::PointerAccessNode>(ctx, $1, $3);}
-    | standalone DOT IDENTIFIER
+    | lvalue DOT IDENTIFIER                 {$$=std::make_shared<pcc::MemberAccessNode>(ctx, $1, std::move($3));}
+    | standalone CARET                      {$$=std::make_shared<pcc::DereferenceNode>(ctx, $1);}
     ;
 
 function_call

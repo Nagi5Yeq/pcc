@@ -34,8 +34,11 @@ class TypeManager {
         GetPointerType(std::shared_ptr<Type> ElementType,
                        const char* CustomName = nullptr);
 
-    // array types and function types are considered unique, unless use type
+    // record, array and function types are considered unique, unless use type
     // alias, you can't get the same type as previous call to this function.
+    std::shared_ptr<RecordType>
+        CreateRecordType(const std::vector<RecordMember>& members);
+
     std::shared_ptr<ArrayType>
         CreateArrayType(std::shared_ptr<Type> ElementType,
                         std::shared_ptr<ExprNode> start,
@@ -63,6 +66,7 @@ class TypeManager {
     std::map<std::shared_ptr<Type>, std::shared_ptr<PointerType>> PointerTypes_;
     std::vector<std::shared_ptr<FunctionType>> FunctionTypes_;
     std::vector<std::shared_ptr<ArrayType>> ArrayTypes_;
+    std::vector<std::shared_ptr<RecordType>> RecordTypes_;
 
     // if we are porting to some 64-bit machines, we can change these types to
     // 64-bit type, in order to make pointers behave correctly

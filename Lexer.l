@@ -28,7 +28,7 @@ namespace pcc {
 
 decimal         ([1-9][0-9]*)|0
 octal           0[0-7]*
-hexadecimal     0[xX][0-9a-fA-F]
+hexadecimal     0[xX][0-9a-fA-F]+
 
 integer         {decimal}|{octal}|{hexadecimal}
 
@@ -120,6 +120,7 @@ white           [\t\f\r ]
 "string"    {return Parser::make_STRING(loc);}
 "array"     {return Parser::make_ARRAY(loc);}
 "of"        {return Parser::make_OF(loc);}
+"record"    {return Parser::make_RECORD(loc);}
 
 "true"      {return Parser::make_BOOLEAN_LITERAL(true, loc);}
 "false"     {return Parser::make_BOOLEAN_LITERAL(false, loc);}

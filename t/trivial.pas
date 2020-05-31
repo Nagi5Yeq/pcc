@@ -175,11 +175,46 @@ type
     a1=integer;
     a2=array[0..9] of a1;
     a3=array[0..9] of a2;
+    rt=record
+        m1:integer;
+        m2:array[1..10] of integer;
+        m3:real
+    end;
 var
     i:a1;
     arr:a3;
+    p:^a2;
+    arr2:array[0..9] of array[0..99] of array[0..9] of integer;
+    r:rt;
 begin
     i:=4;
     arr[i][i]:=i;
-    alias_test:=arr[i][i]*i;
+    p:=@arr[i];
+    p[0][i]:=p[0][i]+1;
+    arr2[0][1][2]:=123;
+    alias_test:=arr2[0][1][2]+arr[i][i]*i;
+end;
+
+function record_test():integer;
+type
+    t1=record
+        m1:integer;
+        m2:char;
+        m3:array[2..6] of real;
+        m4: array[1..2] of record
+            m1:array[0..2] of integer;
+            m2:boolean
+        end
+    end;
+var
+    a:t1;
+    pa:^t1;
+begin
+    a.m1:=2;
+    a.m2:='t';
+    a.m3[2]:=6.66;
+    pa:=@a;
+    pa[0].m3[6]:=7.77;
+    pa^.m4[1].m1[2]:=1234;
+    record_test:=a.m3[6]+pa^.m3[a.m1]+a.m4[1].m1[2];
 end;

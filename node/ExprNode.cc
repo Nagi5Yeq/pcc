@@ -152,6 +152,62 @@ Value ArrayAccessNode::CodeGen() {
     return nullptr;
 }
 
+DereferenceNode::DereferenceNode(Context* context,
+                                 std::shared_ptr<ExprNode> lhs)
+    : ExprNode(context)
+    , lhs_(lhs) {}
+
+Value DereferenceNode::CodeGen() {
+    Value value = lhs_->CodeGen();
+    std::shared_ptr<PointerType> pointer =
+        std::dynamic_pointer_cast<PointerType>(lhs_->GetType());
+    if (pointer == nullptr) {
+        Log(LogLevel::PCC_ERROR, "type %s is not a valid type for dereference",
+            lhs_->GetType()->GetCommonName());
+        return nullptr;
+    }
+    Value zero = llvm::ConstantInt::get(
+        context_->GetTypeManager()->GetPointerIndexType_()->GetLLVMType(), 0);
+    type_ = pointer;
+    return context_->GetBuilder()->CreateInBoundsGEP(value, zero);
+}
+
+MemberAccessNode::MemberAccessNode(Context* context,
+                                   std::shared_ptr<ExprNode> lhs,
+                                   std::string&& rhs)
+    : ExprNode(context)
+    , lhs_(lhs)
+    , rhs_(std::move(rhs)) {}
+
+Value MemberAccessNode::CodeGen() {
+    llvm::IRBuilder<>* builder = context_->GetBuilder();
+    TypeManager* manager = context_->GetTypeManager();
+    Value left = lhs_->CodeGen();
+    std::shared_ptr<PointerType> LeftType =
+        std::dynamic_pointer_cast<PointerType>(lhs_->GetType());
+    if (LeftType == nullptr) {
+        Log(LogLevel::PCC_ERROR,
+            "type %s is not a valid type for member access",
+            lhs_->GetType()->GetCommonName());
+        return nullptr;
+    }
+    std::shared_ptr<RecordType> LeftInner =
+        std::dynamic_pointer_cast<RecordType>(LeftType->GetElementType());
+    if (LeftInner == nullptr) {
+        Log(LogLevel::PCC_ERROR, "type %s is not a record type",
+            LeftType->GetElementType()->GetCommonName());
+        return nullptr;
+    }
+    int MemberIndex;
+    std::shared_ptr<Type> MemberType;
+    std::tie(MemberIndex, MemberType) = LeftInner->GetMember(rhs_);
+    llvm::Type* IndexLLLVMType = manager->GetPointerIndexType_()->GetLLVMType();
+    Value indices[2] = {llvm::ConstantInt::get(IndexLLLVMType, 0),
+                        llvm::ConstantInt::get(IndexLLLVMType, MemberIndex)};
+    type_ = manager->GetPointerType(MemberType);
+    return builder->CreateInBoundsGEP(left, indices);
+}
+
 IdentifierNode::IdentifierNode(Context* context, const std::string& name)
     : ExprNode(context)
     , name_(name) {}

@@ -84,6 +84,26 @@ class ArrayAccessNode : public ExprNode {
     std::shared_ptr<ExprNode> rhs_;
 };
 
+class DereferenceNode : public ExprNode {
+  public:
+    DereferenceNode(Context* context, std::shared_ptr<ExprNode> lhs);
+    virtual Value CodeGen() override;
+
+  protected:
+    std::shared_ptr<ExprNode> lhs_;
+};
+
+class MemberAccessNode : public ExprNode {
+  public:
+    MemberAccessNode(Context* context, std::shared_ptr<ExprNode> lhs,
+                     std::string&& rhs);
+    virtual Value CodeGen() override;
+
+  protected:
+    std::shared_ptr<ExprNode> lhs_;
+    std::string rhs_;
+};
+
 class IdentifierNode : public ExprNode {
   public:
     IdentifierNode(Context* context, const std::string& name);

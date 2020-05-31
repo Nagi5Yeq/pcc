@@ -205,8 +205,25 @@ std::shared_ptr<ArrayType>
         EndValue->getUniqueInteger().getZExtValue() - StartIndex + 1;
     std::shared_ptr<ArrayType> NewType = std::make_shared<ArrayType>(
         ElementType, ElementNumber, IndexType, StartValue, EndValue,
-        std::string(ElementType->GetCommonName()) + "[]", StartIndex == 0);
+        std::string(ElementType->GetCommonName()) + "[" +
+            std::to_string(ElementNumber) + "]",
+        StartIndex == 0);
     ArrayTypes_.push_back(NewType);
+    return NewType;
+}
+
+std::shared_ptr<RecordType>
+    TypeManager::CreateRecordType(const std::vector<RecordMember>& members) {
+    std::string name = "record {";
+    std::vector<RecordMember>::const_iterator MemberIt = members.cbegin();
+    name.append(std::get<1>(*MemberIt)->GetCommonName());
+    for (++MemberIt; MemberIt != members.cend(); ++MemberIt) {
+        name.append(", ");
+        name.append(std::get<1>(*MemberIt)->GetCommonName());
+    }
+    std::shared_ptr<RecordType> NewType =
+        std::make_shared<RecordType>(members, name + "}");
+    RecordTypes_.push_back(NewType);
     return NewType;
 }
 

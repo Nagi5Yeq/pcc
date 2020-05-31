@@ -197,6 +197,17 @@ class FunctionType : public Type {
     std::shared_ptr<Type> ReturnType_;
     std::vector<std::shared_ptr<Type>> ArgTypes_;
 };
+
+using RecordMember = std::pair<std::string, std::shared_ptr<Type>>;
+
+class RecordType : public Type {
+  public:
+    RecordType(const std::vector<RecordMember>& members, std::string&& name);
+    std::pair<int, std::shared_ptr<Type>> GetMember(const std::string& name);
+
+  protected:
+    std::map<std::string, std::pair<int, std::shared_ptr<Type>>> members_;
+};
 } // namespace pcc
 
 #endif // PCC_TYPE_H
