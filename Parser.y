@@ -347,7 +347,7 @@ namespace pcc {
     {
         std::stringstream loc;
         loc<<l;
-        Log(LogLevel::PCC_ERROR, "error at {0}: {1}", loc.str().c_str(), m.c_str());
+        Log(LogLevel::PCC_ERROR, "error at %s: %s", loc.str().c_str(), m.c_str());
     }
 
 }

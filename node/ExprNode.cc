@@ -66,7 +66,7 @@ Value L2RCastingNode::CodeGen() {
         std::dynamic_pointer_cast<PointerType>(lvalue_->GetType());
     if (type == nullptr) {
         Log(LogLevel::PCC_ERROR,
-            "type {0} is not a valid pointer type, this lvalue can't be loaded",
+            "type %s is not a valid pointer type, this lvalue can't be loaded",
             lvalue_->GetType()->GetCommonName());
     }
     type_ = type->GetElementType();
@@ -87,7 +87,7 @@ Value PointerAccessNode::CodeGen() {
         std::dynamic_pointer_cast<PointerType>(lhs_->GetType());
     if (pointer == nullptr) {
         Log(LogLevel::PCC_ERROR,
-            "type {0} is not a valid type for pointer access operator[]",
+            "type %s is not a valid type for pointer access operator[]",
             lhs_->GetType()->GetCommonName());
         return nullptr;
     }
@@ -114,7 +114,7 @@ Value ArrayAccessNode::CodeGen() {
     std::shared_ptr<Type> RightType = rhs_->GetType();
     if (LeftType == nullptr) {
         Log(LogLevel::PCC_ERROR,
-            "type {0} is not a valid type for array access operator[]",
+            "type %s is not a valid type for array access operator[]",
             lhs_->GetType()->GetCommonName());
         return nullptr;
     }
@@ -147,7 +147,7 @@ Value ArrayAccessNode::CodeGen() {
         return builder->CreateInBoundsGEP(PointerValue, CastedRight);
     }
     Log(LogLevel::PCC_ERROR,
-        "type {0} is not a valid lvalue type for array access operator[]",
+        "type %s is not a valid lvalue type for array access operator[]",
         lhs_->GetType()->GetCommonName());
     return nullptr;
 }
@@ -162,7 +162,7 @@ Value DereferenceNode::CodeGen() {
     std::shared_ptr<PointerType> pointer =
         std::dynamic_pointer_cast<PointerType>(lhs_->GetType());
     if (pointer == nullptr) {
-        Log(LogLevel::PCC_ERROR, "type {0} is not a valid type for dereference",
+        Log(LogLevel::PCC_ERROR, "type %s is not a valid type for dereference",
             lhs_->GetType()->GetCommonName());
         return nullptr;
     }
@@ -187,14 +187,14 @@ Value MemberAccessNode::CodeGen() {
         std::dynamic_pointer_cast<PointerType>(lhs_->GetType());
     if (LeftType == nullptr) {
         Log(LogLevel::PCC_ERROR,
-            "type {0} is not a valid type for member access",
+            "type %s is not a valid type for member access",
             lhs_->GetType()->GetCommonName());
         return nullptr;
     }
     std::shared_ptr<RecordType> LeftInner =
         std::dynamic_pointer_cast<RecordType>(LeftType->GetElementType());
     if (LeftInner == nullptr) {
-        Log(LogLevel::PCC_ERROR, "type {0} is not a record type",
+        Log(LogLevel::PCC_ERROR, "type %s is not a record type",
             LeftType->GetElementType()->GetCommonName());
         return nullptr;
     }
@@ -229,14 +229,14 @@ Value FunctionCallNode::CodeGen() {
     Function function = context_->FindFunction(name_);
     std::shared_ptr<FunctionType> type = std::get<0>(function);
     if (type == nullptr) {
-        Log(LogLevel::PCC_ERROR, "call to undefined function {0}",
+        Log(LogLevel::PCC_ERROR, "call to undefined function %s",
             name_.c_str());
         return nullptr;
     }
     const std::vector<std::shared_ptr<Type>>& ArgTypes = type->GetArgTypes();
     if (type->IsVariadic() == false && ArgTypes.size() != args_.size()) {
         Log(LogLevel ::PCC_ERROR,
-            "argument number mismatch, {0} wanted, {1} given", ArgTypes.size(),
+            "argument number mismatch, %d wanted, %d given", ArgTypes.size(),
             args_.size());
         return nullptr;
     }
@@ -249,8 +249,8 @@ Value FunctionCallNode::CodeGen() {
             manager->CreateCast(ArgType, (*ArgIt)->GetType(), argv, context_);
         if (ConvertedArgv == nullptr) {
             Log(LogLevel ::PCC_ERROR,
-                "argument type mismatch, the function type is {0}, an argument "
-                "of type {1} needed",
+                "argument type mismatch, the function type is %s, an argument "
+                "of type %s needed",
                 type->GetCommonName(), ArgType->GetCommonName());
         }
         *ArgValueIt = ConvertedArgv;

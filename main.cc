@@ -21,7 +21,7 @@ void compile(llvm::Module* module, llvm::raw_pwrite_stream& output,
 
 int main(int argc, char* argv[]) {
     int rv;
-    int level = pcc::PCC_WARNING;
+    int level = pcc::ToUnderlying(pcc::PCC_WARNING);
     std::string OutputFileName;
     enum { IR, ASSEMBLY, OBJECT } CompileType = IR;
     int OptLevel = 2;
@@ -51,8 +51,8 @@ int main(int argc, char* argv[]) {
         case 'O':
             OptLevel = optarg[0] - '0';
             if (OptLevel > 3 || OptLevel < 0) {
-                pcc::Log(pcc::PCC_ERROR,
-                         "{0} is not a valid optimization level", optarg[0]);
+                pcc::Log(pcc::PCC_ERROR, "%c is not a valid optimization level",
+                         optarg[0]);
                 pcc::ShowHelp();
             }
             break;
@@ -61,7 +61,6 @@ int main(int argc, char* argv[]) {
             pcc::ShowHelp();
         }
     }
-
     pcc::SetLogLevel(static_cast<pcc::LogLevel>(level));
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmParser();
@@ -72,7 +71,7 @@ int main(int argc, char* argv[]) {
         llvm::TargetRegistry::lookupTarget(triple, error);
     if (!error.empty()) {
         pcc::Log(pcc::PCC_ERROR,
-                 "failed to find target with triple {0}, reason {1}",
+                 "failed to find target with triple %s, reason %s",
                  triple.c_str(), error.c_str());
         return -1;
     }
@@ -83,8 +82,9 @@ int main(int argc, char* argv[]) {
     std::string features = "";
     llvm::TargetOptions options;
     llvm::TargetMachine* machine =
-        target->createTargetMachine(triple, cpu, features, options, llvm::None,
-                                    llvm::None, optimization[OptLevel]);
+        target->createTargetMachine(triple, cpu, features, options, llvm::None);
+    target->createTargetMachine(triple, cpu, features, options, llvm::None,
+                                llvm::None, optimization[OptLevel]);
     llvm::DataLayout layout = machine->createDataLayout();
 
     if (optind >= argc) {
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
             llvm::verifyModule(*module, &MsgStream);
             MsgStream.flush();
             if (!msg.empty()) {
-                pcc::Log(pcc::PCC_WARNING, "{0}", msg.c_str());
+                pcc::Log(pcc::PCC_WARNING, "%s", msg.c_str());
             }
         } else {
             continue;
@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
         default:
             break;
         }
-        pcc::Log(pcc::PCC_INFO, "{0} compiled to {1}", argv[i],
+        pcc::Log(pcc::PCC_INFO, "%s compiled to %s", argv[i],
                  OutputFileName.c_str());
         OutputFileName.clear();
     }

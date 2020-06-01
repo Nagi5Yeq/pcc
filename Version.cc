@@ -1,5 +1,6 @@
 #include <llvm/Config/llvm-config.h>
 
+#include "Log.hh"
 #include "Version.hh"
 
 namespace pcc {
@@ -25,8 +26,8 @@ PCC_NORETURN void ShowVersion() {
 
 PCC_NORETURN void ShowHelp() {
     std::cerr << PCC_NAME " version " PCC_VERSION_STRING "\n"
-              << "Usage: " PCC_NAME
-                 " [-vVhiSc] [-O <0,1,2,3>] [-o <output>] file...\n"
+              << "Usage: " << GetExecutableName()
+              << " [-vVhiSc] [-O <0,1,2,3>] [-o <output>] file...\n"
               << "    -v            Verbose mode.\n"
               << "    -vv           Very verbose mode.\n"
               << "    -V            Show version and exit.\n"
