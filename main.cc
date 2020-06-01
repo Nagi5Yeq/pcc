@@ -21,7 +21,7 @@ void compile(llvm::Module* module, llvm::raw_pwrite_stream& output,
 
 int main(int argc, char* argv[]) {
     int rv;
-    int level = pcc::ToUnderlying(pcc::PCC_WARNING);
+    int level = pcc::PCC_WARNING;
     std::string OutputFileName;
     enum { IR, ASSEMBLY, OBJECT } CompileType = IR;
     int OptLevel = 2;

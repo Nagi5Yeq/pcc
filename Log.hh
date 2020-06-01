@@ -7,6 +7,8 @@
 #include <llvm/Support/FormatVariadic.h>
 #include <llvm/Support/WithColor.h>
 
+#include "Context.hh"
+
 namespace pcc {
 enum LogLevel { PCC_DEBUG, PCC_INFO, PCC_WARNING, PCC_ERROR };
 
@@ -18,6 +20,9 @@ const char* GetExecutableName();
 
 template <typename... Args>
 void Log(LogLevel level, const char* format, Args&&... args) {
+    if (level < GetLogLevel()) {
+        return;
+    }
     auto msg = llvm::formatv(format, std::forward<Args>(args)...);
     const char* name = GetExecutableName();
     switch (level) {
