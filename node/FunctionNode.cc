@@ -47,7 +47,7 @@ Value FunctionNode::CodeGen() {
     context_->AddFunction(name_, {type, function});
     llvm::BasicBlock* block =
         llvm::BasicBlock::Create(GlobalLLVMContext, name_, function);
-    Log(LogLevel::PCC_INFO, "generating function %s of type %s", name_.c_str(),
+    Log(LogLevel::PCC_INFO, "generating function {0} of type {0}", name_,
         type->GetCommonName());
     builder->SetInsertPoint(block);
     context_->PushScope(&locals_);
@@ -86,7 +86,7 @@ Value FunctionNode::CodeGen() {
     llvm::verifyFunction(*function, &MsgStream);
     MsgStream.flush();
     if (!msg.empty()) {
-        Log(LogLevel::PCC_INFO, "%s", msg.c_str());
+        Log(LogLevel::PCC_WARNING, "{0}", msg);
     }
     return nullptr;
 }
@@ -117,7 +117,7 @@ Value ExternNode::CodeGen() {
     llvm::Function* function = llvm::cast<llvm::Function>(callee.getCallee());
     function->setCallingConv(llvm::CallingConv::C);
     context_->AddFunction(name_, {type, function});
-    Log(LogLevel::PCC_INFO, "extern function %s of type %s", name_.c_str(),
+    Log(LogLevel::PCC_INFO, "extern function {0} of type {1}", name_,
         type->GetCommonName());
     return nullptr;
 }

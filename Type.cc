@@ -375,7 +375,7 @@ std::pair<int, std::shared_ptr<Type>>
     RecordType::GetMember(const std::string& name) {
     decltype(members_.end()) result = members_.find(name);
     if (result == members_.end()) {
-        Log(LogLevel::PCC_ERROR, "the member %s doesn't exist", name.c_str());
+        Log(LogLevel::PCC_ERROR, "the member {0} doesn't exist", name.c_str());
         return {0, nullptr};
     }
     return std::get<1>(*result);

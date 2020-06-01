@@ -176,7 +176,7 @@ comment         {comment1}|{comment2}
 
 namespace pcc {
 int Driver::StartLexer(std::string& filename) {
-    yy_flex_debug = (CurrentLogLevel==LogLevel::PCC_DEBUG);
+    yy_flex_debug = (GetLogLevel()==LogLevel::PCC_DEBUG);
     yyin = std::fopen(filename.c_str(), "r");
     if (yyin == NULL) {
         Log(LogLevel::PCC_ERROR, "Failed to open file %s", filename.c_str());

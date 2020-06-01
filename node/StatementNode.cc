@@ -36,7 +36,7 @@ Value AssignStatementNode::CodeGen() {
         std::dynamic_pointer_cast<PointerType>(lhs_->GetType());
     if (LeftType == nullptr) {
         Log(LogLevel::PCC_ERROR,
-            "type %s is not a valid pointer type, can't store anything into "
+            "type {0} is not a valid pointer type, can't store anything into "
             "this lvalue",
             lhs_->GetType()->GetCommonName());
         return nullptr;
@@ -212,7 +212,7 @@ Value ForStatementNode::CodeGen() {
         std::dynamic_pointer_cast<PointerType>(variable_->GetType());
     if (LoopPointer == nullptr) {
         Log(LogLevel::PCC_ERROR,
-            "type %s is not a valid pointer type, can't store anything into "
+            "type {0} is not a valid pointer type, can't store anything into "
             "this lvalue",
             variable_->GetType()->GetCommonName());
         return nullptr;
@@ -222,7 +222,7 @@ Value ForStatementNode::CodeGen() {
             LoopPointer->GetElementType());
     if (LoopType == nullptr) {
         Log(LogLevel::PCC_ERROR,
-            "loop variable should have a integer-like type, not %s",
+            "loop variable should have a integer-like type, not {0}",
             LoopPointer->GetElementType()->GetCommonName());
         return nullptr;
     }

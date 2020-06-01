@@ -14,7 +14,7 @@ std::shared_ptr<ProgramNode> Driver::Parse(std::string& filename) {
         return nullptr;
     }
     Parser parser(*this, &context_);
-    if (CurrentLogLevel == pcc::PCC_DEBUG) {
+    if (GetLogLevel() == pcc::PCC_DEBUG) {
         parser.set_debug_level(1);
     }
     parser.parse();

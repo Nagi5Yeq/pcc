@@ -19,7 +19,7 @@ Variable VariableList::FindVariable(const std::string& name) {
         }
     }
     if (found == false) {
-        Log(LogLevel::PCC_ERROR, "unknown identifier %s", name.c_str());
+        Log(LogLevel::PCC_ERROR, "unknown identifier {0}", name);
         return {nullptr, nullptr};
     }
     return std::get<1>(*result);
@@ -43,7 +43,7 @@ std::shared_ptr<Type> VariableList::FindTypeAlias(const std::string& name) {
         }
     }
     if (found == false) {
-        Log(LogLevel::PCC_ERROR, "unknown type alias %s", name.c_str());
+        Log(LogLevel::PCC_ERROR, "unknown type alias {0}", name);
         return nullptr;
     }
     return std::get<1>(*result);

@@ -44,14 +44,14 @@ std::pair<std::shared_ptr<Type>, Value>
     // add/sub a pointer with a integer
     if (LeftPointerType != nullptr && RightPointerType == nullptr) {
         if (op != BinaryOperator::ADD && op != BinaryOperator::SUB) {
-            Log(LogLevel::PCC_ERROR, "unsupported operation %s on %s and %s",
+            Log(LogLevel::PCC_ERROR, "unsupported operation {0} on %s and {1}",
                 GetOperatorName(op), LeftType->GetCommonName(),
                 RightType->GetCommonName());
             return {nullptr, nullptr};
         }
         if (RightIntegerBaseType == nullptr) {
             Log(LogLevel::PCC_ERROR,
-                "can not add pointer with non-integer type %s",
+                "can not add pointer with non-integer type {0}",
                 RightType->GetCommonName());
             return {nullptr, nullptr};
         }
@@ -101,7 +101,7 @@ std::pair<std::shared_ptr<Type>, Value>
                               : RightType);
         } else {
             Log(LogLevel::PCC_ERROR,
-                "can not apply binary operator on two different type %s and %s",
+                "can not apply binary operator on two different type {0} and {1}",
                 LeftType->GetCommonName(), RightType->GetCommonName());
             return {nullptr, nullptr};
         }
@@ -114,7 +114,7 @@ std::pair<std::shared_ptr<Type>, Value>
                                                      ConvertedRight, context);
     if (result == nullptr) {
         Log(LogLevel::PCC_ERROR,
-            "binary operator %s is not supported on type %s",
+            "binary operator {0} is not supported on type {1}",
             GetOperatorName(op), CommonType->GetCommonName());
     }
     // logical operators return boolean type
@@ -130,7 +130,7 @@ Value TypeManager::CreateOperation(UnaryOperator op, std::shared_ptr<Type> type,
     Value result = type->CreateUnaryOperation(op, v, context);
     if (result == nullptr) {
         Log(LogLevel::PCC_ERROR,
-            "unary operator %s is not supported on type %s",
+            "unary operator {0} is not supported on type {1}",
             GetOperatorName(op), type->GetCommonName());
     }
     return result;
@@ -179,7 +179,7 @@ Value TypeManager::CreateCast(std::shared_ptr<Type> DstType,
             return builder->CreateInBoundsGEP(v, indices);
         }
     }
-    Log(LogLevel::PCC_ERROR, "unsupported type casting from %s to %s",
+    Log(LogLevel::PCC_ERROR, "unsupported type casting from {0} to {1}",
         SrcType->GetCommonName(), DstType->GetCommonName());
     return nullptr;
 }
@@ -209,7 +209,7 @@ std::shared_ptr<ArrayType>
     if (IndexType != end->GetType()) {
         Log(LogLevel::PCC_ERROR,
             "the start and end indices of an array type must be same "
-            "(start=%s, end=%s)",
+            "(start={0}, end={1})",
             IndexType->GetCommonName(), end->GetType()->GetCommonName());
         return nullptr;
     }

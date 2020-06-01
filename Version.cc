@@ -25,16 +25,18 @@ PCC_NORETURN void ShowVersion() {
 
 PCC_NORETURN void ShowHelp() {
     std::cerr << PCC_NAME " version " PCC_VERSION_STRING "\n"
-              << "Usage: " PCC_NAME " [-vVhiSc] file...\n"
-              << "    -v        Verbose mode.\n"
-              << "    -vv       Very verbose mode.\n"
-              << "    -V        Show version and exit.\n"
-              << "    -h        Show this help and exit.\n"
-              << "    -i        Generate LLVM IR (default behavior).\n"
-              << "    -S        Compile to assembly.\n"
-              << "    -c        Compile to object file.\n"
-              << "    -o <file> Specify output file name."
-              << std::endl;
+              << "Usage: " PCC_NAME
+                 " [-vVhiSc] [-O <0,1,2,3>] [-o <output>] file...\n"
+              << "    -v            Verbose mode.\n"
+              << "    -vv           Very verbose mode.\n"
+              << "    -V            Show version and exit.\n"
+              << "    -h            Show this help and exit.\n"
+              << "\n"
+              << "    -i            Generate LLVM IR (default behavior).\n"
+              << "    -S            Compile to assembly file.\n"
+              << "    -c            Compile to object file.\n"
+              << "    -o <output>   Specify output file name.\n"
+              << "    -O <0,1,2,3>  Specify optimization level." << std::endl;
     std::exit(0);
 }
 
