@@ -43,9 +43,10 @@ identifier      [a-z_][0-9a-z_]*
 
 white           [\t\f\r ]
 
-comment1        \{((.|[\n\r])*?)\}      
-comment2        \(\*((.|[\n\r])*?)\*\)
-comment         {comment1}|{comment2}
+comment1        \{([^}])*\}
+comment2        \(\*((\*[^\)])|([^*]))*\*\)
+comment3        \(\*\*\*\)
+comment         {comment1}|{comment2}|{comment3}
 
 %{
 #define YY_USER_ACTION loc.columns(yyleng);
@@ -167,7 +168,7 @@ comment         {comment1}|{comment2}
 {comment} {}
 
 . {
-    std::cerr<<"ERROR";
+    pcc::Log(pcc::LogLevel::PCC_ERROR, "Unrecognized token \"{0}\"", yytext);
 }
 
 <<EOF>>  {return Parser::make_FILE_END(loc);}
@@ -179,7 +180,7 @@ int Driver::StartLexer(std::string& filename) {
     yy_flex_debug = (GetLogLevel()==LogLevel::PCC_DEBUG);
     yyin = std::fopen(filename.c_str(), "r");
     if (yyin == NULL) {
-        Log(LogLevel::PCC_ERROR, "Failed to open file %s", filename.c_str());
+        Log(LogLevel::PCC_ERROR, "Failed to open file {0}", filename);
         return -1;
     }
     return 0;

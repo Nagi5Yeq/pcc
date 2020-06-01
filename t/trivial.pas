@@ -5,16 +5,11 @@ const
     gi=5;
     gr=3.1415;
     gs='nagi';
-var         {this is comment}
+var
     gvi:integer;
     gvf:real;
     gvp:^char;
     gva:array[0..4] of integer;
-
-(* multiline 
-
-
-comments *)
 
 function arithmetic_test(a:integer;b:char;c:real):integer;
 var
@@ -222,4 +217,16 @@ begin
     pa[0].m3[6]:=7.77;
     pa^.m4[1].m1[2]:=1234;
     record_test:=a.m3[6]+pa^.m3[a.m1]+a.m4[1].m1[2];
+end;
+
+(**)function {}comment_test({}):integer{};(**)
+{comment}
+begin{
+begin(* this is in a comment *)
+end;
+}
+comment_test:=1
+(*
+{begin end; also in a comment}
+*)(**)(****)(* *)(***)
 end;

@@ -47,7 +47,7 @@ Value FunctionNode::CodeGen() {
     context_->AddFunction(name_, {type, function});
     llvm::BasicBlock* block =
         llvm::BasicBlock::Create(GlobalLLVMContext, name_, function);
-    Log(LogLevel::PCC_INFO, "generating function {0} of type {0}", name_,
+    Log(LogLevel::PCC_INFO, "generating function {0} of type {1}", name_,
         type->GetCommonName());
     builder->SetInsertPoint(block);
     context_->PushScope(&locals_);
