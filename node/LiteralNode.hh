@@ -28,7 +28,7 @@ LiteralNode<T>::LiteralNode(Context* context, std::shared_ptr<Type> type,
 
 using BooleanLiteralNode = LiteralNode<bool>;
 using CharLiteralNode = LiteralNode<char>;
-using IntegerLiteralNode = LiteralNode<int>;
+using IntegerLiteralNode = LiteralNode<long long>;
 using RealLiteralNode = LiteralNode<float>;
 
 class StringLiteralNode : public ExprNode {

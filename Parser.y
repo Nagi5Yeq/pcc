@@ -45,7 +45,7 @@ YY_DECL;
 %token COLON SEMICOLON COMMA DOTDOT DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
 %token PROGRAM IDENTIFIER VAR CONST TYPE BEGINS ENDS FUNCTION EXTERN DOTDOTDOT
 %token IF THEN ELSE WHILE DO REPEAT UNTIL BREAK CONTINUE FOR TO
-%token VOID BOOLEAN CHAR INTEGER REAL STRING ARRAY OF RECORD
+%token VOID BOOLEAN CHAR INTEGER INT64 REAL STRING ARRAY OF RECORD
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE CARET AT
 %token AND NOT OR XOR SHL SHR
 %token INTEGER_LITERAL REAL_LITERAL STRING_LITERAL BOOLEAN_LITERAL CHAR_LITERAL
@@ -63,7 +63,7 @@ YY_DECL;
 
 %type <bool> BOOLEAN_LITERAL TO
 %type <char> CHAR_LITERAL
-%type <int> INTEGER_LITERAL
+%type <long long> INTEGER_LITERAL
 %type <float> REAL_LITERAL
 %type <std::vector<char>> STRING_LITERAL
 %type <std::shared_ptr<pcc::ExprNode>> literal lvalue rvalue standalone
@@ -165,6 +165,7 @@ type
     | BOOLEAN       {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::BOOLEAN));}
     | CHAR          {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::CHAR));}
     | INTEGER       {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::INTEGER));}
+    | INT64         {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::INT64));}
     | REAL          {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::REAL));}
     | STRING        {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::STRING));}
     | CARET type    {$$=std::make_shared<PointerTypeIdentifier>(ctx, $2);}
@@ -302,7 +303,7 @@ arguments
 literal
     : BOOLEAN_LITERAL   {$$=std::make_shared<pcc::BooleanLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::BOOLEAN), $1);}
     | CHAR_LITERAL      {$$=std::make_shared<pcc::CharLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::CHAR), $1);}
-    | INTEGER_LITERAL   {$$=std::make_shared<pcc::IntegerLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::INTEGER), $1);}
+    | INTEGER_LITERAL   {$$=std::make_shared<pcc::IntegerLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::INT64), $1);}
     | REAL_LITERAL      {$$=std::make_shared<pcc::RealLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::REAL), $1);}
     | STRING_LITERAL    {$$=std::make_shared<pcc::StringLiteralNode>(ctx, ctx->GetTypeManager()->GetBuiltinType(BuiltinType::STRING), $1);}
     ;

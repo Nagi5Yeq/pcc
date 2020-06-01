@@ -16,6 +16,7 @@ enum class BuiltinType {
     BOOLEAN,
     CHAR,
     INTEGER,
+    INT64,
     REAL,
     STRING,
     BUILTIN_NUMBER
@@ -27,6 +28,7 @@ class TypeManager {
     std::shared_ptr<Type> GetBuiltinType(BuiltinType type);
     std::shared_ptr<Type> GetPointerIndexType();
     std::shared_ptr<Type> GetPointerDifferenceType();
+    std::shared_ptr<Type> GetRecordMemberIndexType();
 
     // if call this function twice with the same ElementType, it will return the
     // same shared_ptr to the Type.
@@ -73,6 +75,7 @@ class TypeManager {
     // 64-bit type, in order to make pointers behave correctly
     std::shared_ptr<Type> PointerDifferenceType_;
     std::shared_ptr<Type> PointerIndexType_;
+    std::shared_ptr<Type> RecordMemberIndexType_;
 };
 } // namespace pcc
 

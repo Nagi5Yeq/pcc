@@ -3,7 +3,7 @@ program sha1;
 type
     sha1_ctx = record
     h:array [0..4] of integer;
-    bytes:integer;
+    bytes:int64;
     buf:array [0..63] of char
     end;
 
@@ -119,8 +119,8 @@ end;
 
 function sha1_final(md:^char; ctx:^sha1_ctx):void;
 var
-    used, free:integer;
-    bits, i:integer;
+    used, free, i:integer;
+    bits:int64;
 begin
     used := ctx^.bytes and 0x3f;
     ctx^.buf[used] := 0x80;
@@ -134,9 +134,7 @@ begin
     end;
     memset(@ctx^.buf[used], 0, free-8);
     bits := ctx^.bytes shl 3;
-    for i := 0 to 3 do
-        ctx^.buf[56+i] := 0;
-    for i := 4 to 7 do
+    for i := 0 to 7 do
         ctx^.buf[i+56] := bits shr (8*(7-i));
     sha1_body(ctx, @ctx^.buf, 64);
     for i := 0 to 19 do

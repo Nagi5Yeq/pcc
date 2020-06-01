@@ -119,6 +119,7 @@ comment         {comment1}|{comment2}|{comment3}
 "boolean"   {return Parser::make_BOOLEAN(loc);}
 "char"      {return Parser::make_CHAR(loc);}
 "integer"   {return Parser::make_INTEGER(loc);}
+"int64"     {return Parser::make_INT64(loc);}
 "real"      {return Parser::make_REAL(loc);}
 "string"    {return Parser::make_STRING(loc);}
 "array"     {return Parser::make_ARRAY(loc);}
@@ -129,7 +130,7 @@ comment         {comment1}|{comment2}|{comment3}
 "false"     {return Parser::make_BOOLEAN_LITERAL(false, loc);}
 
 {integer} {
-    int number = std::strtol(yytext, NULL, 0);
+    long long number = std::strtoll(yytext, NULL, 0);
     return Parser::make_INTEGER_LITERAL(number, loc);
 }
 

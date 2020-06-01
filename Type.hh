@@ -141,6 +141,15 @@ class IntegerType : public IntegerBaseType {
                                        Context* context) override;
 };
 
+class Int64Type : public IntegerBaseType {
+  public:
+    Int64Type();
+    virtual Value CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                        Context* context) override;
+    virtual Value CreateUnaryOperation(UnaryOperator op, Value v,
+                                       Context* context) override;
+};
+
 class RealType : public Type {
   public:
     RealType();

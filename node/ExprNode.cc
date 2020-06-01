@@ -126,10 +126,11 @@ Value ArrayAccessNode::CodeGen() {
         Value indices[2] = {llvm::ConstantInt::get(
             manager->GetPointerIndexType()->GetLLVMType(), 0)};
         if (array->GetIsZeroStarted() == false) {
-            Value ConvertedRight =
+            Value CastedRight =
                 manager->CreateCast(IndexType, RightType, right, context_);
             auto AdjustedRight = IndexType->CreateBinaryOperation(
-                BinaryOperator::SUB, right, array->GetIndexStart(), context_);
+                BinaryOperator::SUB, CastedRight, array->GetIndexStart(),
+                context_);
             indices[1] = AdjustedRight;
         } else {
             indices[1] = right;
@@ -201,7 +202,8 @@ Value MemberAccessNode::CodeGen() {
     int MemberIndex;
     std::shared_ptr<Type> MemberType;
     std::tie(MemberIndex, MemberType) = LeftInner->GetMember(rhs_);
-    llvm::Type* IndexLLLVMType = manager->GetPointerIndexType()->GetLLVMType();
+    llvm::Type* IndexLLLVMType =
+        manager->GetRecordMemberIndexType()->GetLLVMType();
     Value indices[2] = {llvm::ConstantInt::get(IndexLLLVMType, 0),
                         llvm::ConstantInt::get(IndexLLLVMType, MemberIndex)};
     type_ = manager->GetPointerType(MemberType);

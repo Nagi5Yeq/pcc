@@ -10,7 +10,7 @@ var
     i:integer;
 begin
     Pascal_puts('Hello, World!');
-    Pascal_printf('Variadic Function Test: %d, %s, %x\n', 1, 'yes', 0x12345678);
+    Pascal_printf('Variadic Function Test: %d, %s, %llx\n', 1, 'yes', 0x123456789abcd);
     for i:=0 to 10 do
     begin
         if i=3 then continue;

@@ -254,6 +254,30 @@ Value IntegerType::CreateUnaryOperation(UnaryOperator op, Value v,
     return (this->*operations[ToUnderlying(op)])(v, context);
 }
 
+Int64Type::Int64Type()
+    : IntegerBaseType("int64", 64, llvm::Type::getInt64Ty(GlobalLLVMContext)) {}
+
+Value Int64Type::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                       Context* context) {
+    static Value (pcc::Int64Type::*operations[ToUnderlying(
+        BinaryOperator::BINARYOP_NUMBER)])(Value, Value, Context*) = {
+        &Int64Type::CreateAdd, &Int64Type::CreateSub, &Int64Type::CreateMul,
+        &Int64Type::CreateDiv, &Int64Type::CreateMod, &Int64Type::CreateLt,
+        &Int64Type::CreateLe,  &Int64Type::CreateGt,  &Int64Type::CreateGe,
+        &Int64Type::CreateEq,  &Int64Type::CreateNe,  &Int64Type::CreateAnd,
+        &Int64Type::CreateOr,  &Int64Type::CreateXor, &Int64Type::CreateShl,
+        &Int64Type::CreateShr};
+    return (this->*operations[ToUnderlying(op)])(v0, v1, context);
+}
+
+Value Int64Type::CreateUnaryOperation(UnaryOperator op, Value v,
+                                      Context* context) {
+    static Value (pcc::Int64Type::*operations[ToUnderlying(
+        UnaryOperator::UNARYOP_NUMEBR)])(Value, Context*) = {
+        &Int64Type::CreatePos, &Int64Type::CreateNeg, &Int64Type::CreateNot};
+    return (this->*operations[ToUnderlying(op)])(v, context);
+}
+
 RealType::RealType()
     : Type("real", llvm::Type::getFloatTy(GlobalLLVMContext)) {}
 

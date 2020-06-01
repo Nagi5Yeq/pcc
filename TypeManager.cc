@@ -5,11 +5,13 @@
 
 namespace pcc {
 TypeManager::TypeManager()
-    : builtins_{std::make_shared<VoidType>(), std::make_shared<BooleanType>(),
-                std::make_shared<CharType>(), std::make_shared<IntegerType>(),
-                std::make_shared<RealType>()} {
-    PointerDifferenceType_ = GetBuiltinType(BuiltinType::INTEGER);
-    PointerIndexType_ = GetBuiltinType(BuiltinType::INTEGER);
+    : builtins_{std::make_shared<VoidType>(),  std::make_shared<BooleanType>(),
+                std::make_shared<CharType>(),  std::make_shared<IntegerType>(),
+                std::make_shared<Int64Type>(), std::make_shared<RealType>()} {
+    PointerIndexType_ = GetBuiltinType(BuiltinType::INT64);
+    PointerDifferenceType_ = GetBuiltinType(BuiltinType::INT64);
+    // llvm seems doesn't support GEP with i64 index type on records
+    RecordMemberIndexType_ = GetBuiltinType(BuiltinType::INTEGER);
     builtins_.push_back(
         GetPointerType(GetBuiltinType(BuiltinType::CHAR), "string"));
     // llvm doesn't have void* type, we use char* instead
@@ -270,6 +272,10 @@ std::shared_ptr<Type> TypeManager::GetPointerIndexType() {
 
 std::shared_ptr<Type> TypeManager::GetPointerDifferenceType() {
     return PointerDifferenceType_;
+}
+
+std::shared_ptr<Type> TypeManager::GetRecordMemberIndexType() {
+    return RecordMemberIndexType_;
 }
 
 } // namespace pcc
