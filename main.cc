@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
             }
             break;
         default:
-            pcc::Log(pcc::PCC_ERROR, "Unknown option");
+            pcc::Log(pcc::PCC_ERROR, "unknown option");
             pcc::ShowHelp();
         }
     }
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
     llvm::DataLayout layout = machine->createDataLayout();
 
     if (optind >= argc) {
-        pcc::Log(pcc::PCC_ERROR, "No input file specified");
+        pcc::Log(pcc::PCC_ERROR, "no input file specified");
         return -1;
     }
     if (!OutputFileName.empty() && optind != argc - 1) {

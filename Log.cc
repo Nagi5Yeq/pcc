@@ -1,28 +1,32 @@
+#include <iostream>
 #include <string>
 
+#include "Color.hh"
 #include "Log.hh"
 
 namespace pcc {
 void Log(LogLevel level, const char* format, ...) {
+    char buf[1024];
     va_list va;
     va_start(va, format);
     if (GetLogLevel() <= level) {
+        std::cerr << GetExecutableName() << ": ";
         switch (level) {
         case PCC_ERROR:
-            std::fprintf(stderr, "[ERROR] ");
+            std::cerr << Color::RED << "error: ";
             break;
         case PCC_WARNING:
-            std::fprintf(stderr, "[WARNING] ");
+            std::cerr << Color::YELLOW << "warning: ";
             break;
         case PCC_INFO:
-            std::fprintf(stderr, "[INFO] ");
+            std::cerr << Color::CYAN << "info: ";
             break;
         case PCC_DEBUG:
-            std::fprintf(stderr, "[DEBUG] ");
+            std::cerr << Color::GREEN << "remark: ";
             break;
         }
-        std::vfprintf(stderr, format, va);
-        std::fputc('\n', stderr);
+        std::vsnprintf(buf, sizeof(buf), format, va);
+        std::cerr << Color::WHITE << buf << Color::DEFAULT << std::endl;
     }
     va_end(va);
 }

@@ -7,6 +7,7 @@ include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 set(PCC_SOURCE
+    Color.cc
     Context.cc
     Driver.cc
     Log.cc

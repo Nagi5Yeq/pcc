@@ -168,7 +168,7 @@ comment         {comment1}|{comment2}|{comment3}
 {comment} {}
 
 . {
-    pcc::Log(pcc::PCC_ERROR, "Unrecognized token \"%s\"", yytext);
+    pcc::Log(pcc::PCC_ERROR, "unrecognized token \"%s\"", yytext);
 }
 
 <<EOF>>  {return Parser::make_FILE_END(loc);}
@@ -180,7 +180,7 @@ int Driver::StartLexer(std::string& filename) {
     yy_flex_debug = (GetLogLevel()==LogLevel::PCC_DEBUG);
     yyin = std::fopen(filename.c_str(), "r");
     if (yyin == NULL) {
-        Log(LogLevel::PCC_ERROR, "Failed to open file %s", filename.c_str());
+        Log(LogLevel::PCC_ERROR, "failed to open file %s", filename.c_str());
         return -1;
     }
     return 0;
