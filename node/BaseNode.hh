@@ -4,12 +4,14 @@
 #include <list>
 
 #include "Context.hh"
+#include "Traveler.hh"
 
 namespace pcc {
 class BaseNode {
   public:
     BaseNode(Context* context);
     virtual Value CodeGen() = 0;
+    virtual int Travel(Traveler& traveler) = 0;
 
   protected:
     Context* context_;
@@ -24,6 +26,7 @@ class ProgramNode : public BaseNode {
                 std::list<std::shared_ptr<DeclNode>>&& GlobalDeclarations,
                 std::list<std::shared_ptr<FunctionNode>>&& functions);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::string name_;

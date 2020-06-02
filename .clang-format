@@ -34,3 +34,5 @@ SpaceAfterCStyleCast: true
 #tab键盘的宽度
 TabWidth: 4
 UseTab: Never
+#在模板参数声明后换行
+AlwaysBreakTemplateDeclarations: true

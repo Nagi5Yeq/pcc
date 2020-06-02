@@ -12,6 +12,7 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
 
+#include "AsciiTraveler.hh"
 #include "Driver.hh"
 #include "Log.hh"
 #include "Version.hh"
@@ -25,9 +26,10 @@ int main(int argc, char* argv[]) {
     std::string OutputFileName;
     enum { IR, ASSEMBLY, OBJECT } CompileType = IR;
     int OptLevel = 2;
+    bool AsciiTravel = false;
 
     pcc::SetExecutableName(argv[0]);
-    while ((rv = getopt(argc, argv, "vVhiSco:O:")) != -1) {
+    while ((rv = getopt(argc, argv, "vVhiScao:O:")) != -1) {
         switch (rv) {
         case 'v':
             level = (level == 0 ? 0 : level - 1);
@@ -44,6 +46,9 @@ int main(int argc, char* argv[]) {
             break;
         case 'c':
             CompileType = OBJECT;
+            break;
+        case 'a':
+            AsciiTravel = true;
             break;
         case 'o':
             OutputFileName = optarg;
@@ -144,6 +149,12 @@ int main(int argc, char* argv[]) {
         pcc::Log(pcc::PCC_INFO, "%s compiled to %s", argv[i],
                  OutputFileName.c_str());
         OutputFileName.clear();
+        if (AsciiTravel == true) {
+            pcc::Log(pcc::PCC_INFO, "dumping abstract syntax tree of %s",
+                     argv[i]);
+            pcc::AsciiTraveler traveler(std::cerr);
+            root->Travel(traveler);
+        }
     }
     return 0;
 }

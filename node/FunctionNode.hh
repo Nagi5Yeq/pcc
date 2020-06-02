@@ -16,6 +16,7 @@ class FunctionNode : public BaseNode {
                  std::shared_ptr<TypeIdentifier> ReturnTypeIdentifier,
                  std::shared_ptr<StatementListNode> body);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::string name_;
@@ -33,6 +34,7 @@ class ExternNode : public FunctionNode {
                std::shared_ptr<TypeIdentifier> ReturnTypeIdentifier,
                bool IsVariadic);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     bool IsVariadic_;

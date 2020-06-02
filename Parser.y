@@ -45,7 +45,7 @@ YY_DECL;
 %token COLON SEMICOLON COMMA DOTDOT DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
 %token PROGRAM IDENTIFIER VAR CONST TYPE BEGINS ENDS FUNCTION EXTERN DOTDOTDOT
 %token IF THEN ELSE WHILE DO REPEAT UNTIL BREAK CONTINUE FOR TO
-%token VOID BOOLEAN CHAR INTEGER INT64 REAL STRING ARRAY OF RECORD
+%token VOID BOOLEAN CHAR SHORT INTEGER INT64 REAL STRING ARRAY OF RECORD
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE CARET AT
 %token AND NOT OR XOR SHL SHR
 %token INTEGER_LITERAL REAL_LITERAL STRING_LITERAL BOOLEAN_LITERAL CHAR_LITERAL
@@ -164,6 +164,7 @@ type
     : VOID          {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::VOID));}
     | BOOLEAN       {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::BOOLEAN));}
     | CHAR          {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::CHAR));}
+    | SHORT         {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::SHORT));}
     | INTEGER       {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::INTEGER));}
     | INT64         {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::INT64));}
     | REAL          {$$=std::make_shared<TrivialTypeIdentifier>(ctx, ctx->GetTypeManager()->GetBuiltinType(pcc::BuiltinType::REAL));}
@@ -198,7 +199,7 @@ function
     | FUNCTION IDENTIFIER LPARENTHESIS RPARENTHESIS COLON type SEMICOLON decls statement_block              {$$=std::make_shared<pcc::FunctionNode>(ctx, std::move($2), std::list<Declaration>(), std::move($8), $6, $9);}
     | EXTERN IDENTIFIER LPARENTHESIS var_decls RPARENTHESIS COLON type                                      {$$=std::make_shared<pcc::ExternNode>(ctx, std::move($2), std::move($4), $7, false);}
     | EXTERN IDENTIFIER LPARENTHESIS RPARENTHESIS COLON type                                                {$$=std::make_shared<pcc::ExternNode>(ctx, std::move($2), std::list<Declaration>(), $6, false);}
-    | EXTERN IDENTIFIER LPARENTHESIS var_decls COMMA DOTDOTDOT RPARENTHESIS COLON type                      {$$=std::make_shared<pcc::ExternNode>(ctx, std::move($2), std::move($4), $9, true);}
+    | EXTERN IDENTIFIER LPARENTHESIS var_decls SEMICOLON DOTDOTDOT RPARENTHESIS COLON type                  {$$=std::make_shared<pcc::ExternNode>(ctx, std::move($2), std::move($4), $9, true);}
     ;
 
 /* ==================[statements part]================== */

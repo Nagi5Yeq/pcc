@@ -25,6 +25,7 @@ class VarDeclNode : public DeclNode {
     VarDeclNode(Context* context, VariableList* scope,
                 std::list<Declaration>&& decls);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::list<Declaration> decls_;
@@ -38,6 +39,7 @@ class ConstDeclNode : public DeclNode {
     ConstDeclNode(Context* context, VariableList* scope,
                   std::list<Constant>&& decls);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::list<Constant> decls_;
@@ -48,6 +50,7 @@ class TypeDeclNode : public DeclNode {
     TypeDeclNode(Context* context, VariableList* scope,
                  std::list<Declaration>&& decls);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::list<Declaration> decls_;

@@ -1,3 +1,4 @@
+#include <iterator>
 #include <memory>
 #include <vector>
 
@@ -31,9 +32,10 @@ Value FunctionNode::CodeGen() {
     llvm::Module* module = context_->GetModule();
     llvm::IRBuilder<>* builder = context_->GetBuilder();
     TypeManager* manager = context_->GetTypeManager();
-    std::vector<std::shared_ptr<Type>> params(arguments_.size());
+    std::vector<std::shared_ptr<Type>> params;
+    params.reserve(arguments_.size());
     std::transform(
-        arguments_.cbegin(), arguments_.cend(), params.begin(),
+        arguments_.cbegin(), arguments_.cend(), std::back_inserter(params),
         [](const Declaration& decl) { return std::get<1>(decl)->GetType(); });
     std::shared_ptr<Type> ReturnType = ReturnTypeIdentifier_->GetType();
     std::shared_ptr<FunctionType> type =
@@ -104,9 +106,10 @@ Value ExternNode::CodeGen() {
     llvm::Module* module = context_->GetModule();
     llvm::IRBuilder<>* builder = context_->GetBuilder();
     TypeManager* manager = context_->GetTypeManager();
-    std::vector<std::shared_ptr<Type>> params(arguments_.size());
+    std::vector<std::shared_ptr<Type>> params;
+    params.reserve(arguments_.size());
     std::transform(
-        arguments_.cbegin(), arguments_.cend(), params.begin(),
+        arguments_.cbegin(), arguments_.cend(), std::back_inserter(params),
         [](const Declaration& decl) { return std::get<1>(decl)->GetType(); });
     std::shared_ptr<Type> ReturnType = ReturnTypeIdentifier_->GetType();
     std::shared_ptr<FunctionType> type =

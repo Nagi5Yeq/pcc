@@ -7,10 +7,12 @@
 #include "ExprNode.hh"
 
 namespace pcc {
-template <typename T> class LiteralNode : public ExprNode {
+template <typename T>
+class LiteralNode : public ExprNode {
   public:
     LiteralNode(Context* context, std::shared_ptr<Type> type, T value);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   private:
     T value_;
@@ -36,6 +38,7 @@ class StringLiteralNode : public ExprNode {
     StringLiteralNode(Context* context, std::shared_ptr<Type> type,
                       std::vector<char> value);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   private:
     std::vector<char> value_;

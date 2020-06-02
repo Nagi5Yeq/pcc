@@ -5,7 +5,8 @@
 #include "LiteralNode.hh"
 
 namespace pcc {
-template <> Value BooleanLiteralNode::CodeGen() {
+template <>
+Value BooleanLiteralNode::CodeGen() {
     if (value_ == true) {
         return llvm::ConstantInt::getTrue(GlobalLLVMContext);
     } else {
@@ -13,15 +14,18 @@ template <> Value BooleanLiteralNode::CodeGen() {
     }
 }
 
-template <> Value CharLiteralNode::CodeGen() {
+template <>
+Value CharLiteralNode::CodeGen() {
     return llvm::ConstantInt::get(type_->GetLLVMType(), value_, true);
 }
 
-template <> Value IntegerLiteralNode::CodeGen() {
+template <>
+Value IntegerLiteralNode::CodeGen() {
     return llvm::ConstantInt::get(type_->GetLLVMType(), value_, true);
 }
 
-template <> Value RealLiteralNode::CodeGen() {
+template <>
+Value RealLiteralNode::CodeGen() {
     llvm::APFloat value(value_);
     return llvm::ConstantFP::get(GlobalLLVMContext, value);
 }

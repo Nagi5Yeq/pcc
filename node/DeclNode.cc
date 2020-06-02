@@ -75,9 +75,9 @@ TypeDeclNode::TypeDeclNode(Context* context, VariableList* scope,
     , decls_(std::move(decls)) {}
 
 Value TypeDeclNode::CodeGen() {
-    scope_ = (scope_ == nullptr ? context_->GetGlobals() : scope_);
+    VariableList* scope = (scope_ == nullptr ? context_->GetGlobals() : scope_);
     for (auto&& decl : decls_) {
-        scope_->AddTypeAlias(std::get<0>(decl), std::get<1>(decl)->GetType());
+        scope->AddTypeAlias(std::get<0>(decl), std::get<1>(decl)->GetType());
     }
     return nullptr;
 }

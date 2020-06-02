@@ -15,10 +15,12 @@ enum class BuiltinType {
     VOID,
     BOOLEAN,
     CHAR,
+    SHORT,
     INTEGER,
     INT64,
     REAL,
     STRING,
+    VOIDPTR,
     BUILTIN_NUMBER
 };
 class TypeManager {

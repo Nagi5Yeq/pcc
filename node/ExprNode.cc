@@ -242,9 +242,9 @@ Value FunctionCallNode::CodeGen() {
             args_.size());
         return nullptr;
     }
-    std::vector<Value> ArgValues(args_.size());
+    std::vector<Value> ArgValues;
+    ArgValues.reserve(args_.size());
     auto ArgIt = args_.begin();
-    auto ArgValueIt = ArgValues.begin();
     for (auto&& ArgType : ArgTypes) {
         Value argv = (*ArgIt)->CodeGen();
         Value ConvertedArgv =
@@ -255,12 +255,12 @@ Value FunctionCallNode::CodeGen() {
                 "of type %s needed",
                 type->GetCommonName(), ArgType->GetCommonName());
         }
-        *ArgValueIt = ConvertedArgv;
-        ++ArgIt, ++ArgValueIt;
+        ArgValues.push_back(ConvertedArgv);
+        ++ArgIt;
     }
     while (ArgIt != args_.end()) {
-        *ArgValueIt = (*ArgIt)->CodeGen();
-        ++ArgIt, ++ArgValueIt;
+        ArgValues.push_back((*ArgIt)->CodeGen());
+        ++ArgIt;
     }
     type_ = type->GetReturnType();
     return context_->GetBuilder()->CreateCall(std::get<1>(function), ArgValues);

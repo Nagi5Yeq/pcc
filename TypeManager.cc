@@ -5,9 +5,11 @@
 
 namespace pcc {
 TypeManager::TypeManager()
-    : builtins_{std::make_shared<VoidType>(),  std::make_shared<BooleanType>(),
-                std::make_shared<CharType>(),  std::make_shared<IntegerType>(),
-                std::make_shared<Int64Type>(), std::make_shared<RealType>()} {
+    : builtins_{
+          std::make_shared<VoidType>(),    std::make_shared<BooleanType>(),
+          std::make_shared<CharType>(),    std::make_shared<ShortType>(),
+          std::make_shared<IntegerType>(), std::make_shared<Int64Type>(),
+          std::make_shared<RealType>()} {
     PointerIndexType_ = GetBuiltinType(BuiltinType::INT64);
     PointerDifferenceType_ = GetBuiltinType(BuiltinType::INT64);
     // llvm seems doesn't support GEP with i64 index type on records
@@ -15,11 +17,11 @@ TypeManager::TypeManager()
     builtins_.push_back(
         GetPointerType(GetBuiltinType(BuiltinType::CHAR), "string"));
     // llvm doesn't have void* type, we use char* instead
-    PointerTypes_.emplace(
-        GetBuiltinType(BuiltinType::VOID),
-        std::make_shared<PointerType>(GetBuiltinType(BuiltinType::CHAR),
-                                      PointerDifferenceType_, PointerIndexType_,
-                                      "^void"));
+    std::shared_ptr<PointerType> VoidPtr = std::make_shared<PointerType>(
+        GetBuiltinType(BuiltinType::CHAR), PointerDifferenceType_,
+        PointerIndexType_, "^void");
+    builtins_.push_back(VoidPtr);
+    PointerTypes_.insert({GetBuiltinType(BuiltinType::VOID), VoidPtr});
 }
 
 std::shared_ptr<Type> TypeManager::GetBuiltinType(BuiltinType type) {
@@ -164,17 +166,22 @@ Value TypeManager::CreateCast(std::shared_ptr<Type> DstType,
         }
     }
 
-    // array to pointer decay
     std::shared_ptr<PointerType> SrcPointerType =
         std::dynamic_pointer_cast<PointerType>(SrcType);
     std::shared_ptr<PointerType> DstPointerType =
         std::dynamic_pointer_cast<PointerType>(DstType);
     if (SrcPointerType != nullptr && DstPointerType != nullptr) {
+        // pointer cast between void* and others
+        std::shared_ptr<Type> VoidPtr = GetBuiltinType(BuiltinType::VOIDPTR);
+        if (SrcPointerType == VoidPtr || DstPointerType == VoidPtr) {
+            return builder->CreatePointerCast(v, DstType->GetLLVMType());
+        }
+        // array to pointer decay
         std::shared_ptr<ArrayType> SrcInnerType =
             std::dynamic_pointer_cast<ArrayType>(
                 SrcPointerType->GetElementType());
-        if (SrcInnerType->GetElementType() ==
-            DstPointerType->GetElementType()) {
+        if (SrcInnerType != nullptr && SrcInnerType->GetElementType() ==
+                                           DstPointerType->GetElementType()) {
             Value zero =
                 llvm::ConstantInt::get(PointerIndexType_->GetLLVMType(), 0);
             Value indices[2] = {zero, zero};
@@ -252,7 +259,7 @@ std::shared_ptr<FunctionType>
                                     std::vector<std::shared_ptr<Type>> ArgTypes,
                                     bool IsVariadic) {
     decltype(ArgTypes)::const_iterator ArgIt = ArgTypes.cbegin();
-    std::string name = " (*)(";
+    std::string name = "(*)(";
     if (!ArgTypes.empty()) {
         name.append((*ArgIt)->GetCommonName());
         for (++ArgIt; ArgIt != ArgTypes.cend(); ++ArgIt) {

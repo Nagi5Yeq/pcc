@@ -22,7 +22,8 @@ class BinaryExprNode : public ExprNode {
     BinaryExprNode(Context* context, BinaryOperator op,
                    std::shared_ptr<ExprNode> left,
                    std::shared_ptr<ExprNode> right);
-    virtual Value CodeGen();
+    virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     BinaryOperator op_;
@@ -33,7 +34,8 @@ class UnaryExprNode : public ExprNode {
   public:
     UnaryExprNode(Context* context, UnaryOperator op,
                   std::shared_ptr<ExprNode> value);
-    virtual Value CodeGen();
+    virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     UnaryOperator op_;
@@ -55,6 +57,7 @@ class L2RCastingNode : public ExprNode {
   public:
     L2RCastingNode(Context* context, std::shared_ptr<ExprNode> lvalue);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::shared_ptr<ExprNode> lvalue_;
@@ -66,6 +69,7 @@ class PointerAccessNode : public ExprNode {
     PointerAccessNode(Context* context, std::shared_ptr<ExprNode> lhs,
                       std::shared_ptr<ExprNode> rhs);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::shared_ptr<ExprNode> lhs_;
@@ -78,6 +82,7 @@ class ArrayAccessNode : public ExprNode {
     ArrayAccessNode(Context* context, std::shared_ptr<ExprNode> lhs,
                     std::shared_ptr<ExprNode> rhs);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::shared_ptr<ExprNode> lhs_;
@@ -88,6 +93,7 @@ class DereferenceNode : public ExprNode {
   public:
     DereferenceNode(Context* context, std::shared_ptr<ExprNode> lhs);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::shared_ptr<ExprNode> lhs_;
@@ -98,6 +104,7 @@ class MemberAccessNode : public ExprNode {
     MemberAccessNode(Context* context, std::shared_ptr<ExprNode> lhs,
                      std::string&& rhs);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::shared_ptr<ExprNode> lhs_;
@@ -108,6 +115,7 @@ class IdentifierNode : public ExprNode {
   public:
     IdentifierNode(Context* context, const std::string& name);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::string name_;
@@ -118,6 +126,7 @@ class FunctionCallNode : public ExprNode {
     FunctionCallNode(Context* context, const std::string& name,
                      std::list<std::shared_ptr<ExprNode>>&& args);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::string name_;

@@ -1,8 +1,8 @@
 program hello_world;
 
 extern Pascal_puts(s:string):integer;
-extern Pascal_printf(s:string, ...):integer;
-extern Pascal_scanf(s:string, ...):integer;
+extern Pascal_printf(s:string; ...):integer;
+extern Pascal_scanf(s:string; ...):integer;
 
 function main():integer;
 var

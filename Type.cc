@@ -1,3 +1,5 @@
+#include <iterator>
+
 #include <llvm/IR/InstrTypes.h>
 
 #include "Context.hh"
@@ -6,9 +8,9 @@
 
 namespace pcc {
 const char* GetOperatorName(BinaryOperator op) {
-    static const char* names[ToUnderlying(BinaryOperator::BINARYOP_NUMBER)] = {
-        "+",  "-", "*",  "/",   "%",  "<",   "<=",  ">",
-        ">=", "=", "<>", "and", "or", "xor", "shl", "shr"};
+    static const char* names[] = {"+",  "-",   "*",   "/",   "%",  "<",
+                                  "<=", ">",   ">=",  "=",   "<>", "and",
+                                  "or", "xor", "shl", "shr", "",   "div"};
     return names[ToUnderlying(op)];
 }
 
@@ -226,6 +228,30 @@ Value CharType::CreateUnaryOperation(UnaryOperator op, Value v,
     return (this->*operations[ToUnderlying(op)])(v, context);
 }
 
+ShortType::ShortType()
+    : IntegerBaseType("short", 16, llvm::Type::getInt16Ty(GlobalLLVMContext)) {}
+
+Value ShortType::CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                       Context* context) {
+    static Value (pcc::ShortType::*operations[ToUnderlying(
+        BinaryOperator::BINARYOP_NUMBER)])(Value, Value, Context*) = {
+        &ShortType::CreateAdd, &ShortType::CreateSub, &ShortType::CreateMul,
+        &ShortType::CreateDiv, &ShortType::CreateMod, &ShortType::CreateLt,
+        &ShortType::CreateLe,  &ShortType::CreateGt,  &ShortType::CreateGe,
+        &ShortType::CreateEq,  &ShortType::CreateNe,  &ShortType::CreateAnd,
+        &ShortType::CreateOr,  &ShortType::CreateXor, &ShortType::CreateShl,
+        &ShortType::CreateShr};
+    return (this->*operations[ToUnderlying(op)])(v0, v1, context);
+}
+
+Value ShortType::CreateUnaryOperation(UnaryOperator op, Value v,
+                                      Context* context) {
+    static Value (pcc::ShortType::*operations[ToUnderlying(
+        UnaryOperator::UNARYOP_NUMEBR)])(Value, Context*) = {
+        &ShortType::CreatePos, &ShortType::CreateNeg, &ShortType::CreateNot};
+    return (this->*operations[ToUnderlying(op)])(v, context);
+}
+
 IntegerType::IntegerType()
     : IntegerBaseType("integer", 32,
                       llvm::Type::getInt32Ty(GlobalLLVMContext)) {}
@@ -363,9 +389,10 @@ FunctionType::FunctionType(std::shared_ptr<Type> ReturnType,
     , ReturnType_(ReturnType)
     , ArgTypes_(ArgTypes)
     , IsVariadic_(IsVariadic) {
-    std::vector<llvm::Type*> params(ArgTypes_.size());
+    std::vector<llvm::Type*> params;
+    params.reserve(ArgTypes_.size());
     std::transform(
-        ArgTypes_.cbegin(), ArgTypes_.cend(), params.begin(),
+        ArgTypes_.cbegin(), ArgTypes_.cend(), std::back_inserter(params),
         [](std::shared_ptr<Type> decl) { return decl->GetLLVMType(); });
     LLVMType_ = llvm::FunctionType::get(ReturnType_->GetLLVMType(), params,
                                         IsVariadic_);
@@ -386,9 +413,10 @@ RecordType::RecordType(const std::vector<RecordMember>& members,
     for (auto&& member : members) {
         members_.insert({std::get<0>(member), {i++, std::get<1>(member)}});
     }
-    std::vector<llvm::Type*> MemberTypes(members.size());
+    std::vector<llvm::Type*> MemberTypes;
+    MemberTypes.reserve(members.size());
     std::transform(
-        members.cbegin(), members.cend(), MemberTypes.begin(),
+        members.cbegin(), members.cend(), std::back_inserter(MemberTypes),
         [](const std::pair<std::string, std::shared_ptr<Type>>& member) {
             return std::get<1>(member)->GetLLVMType();
         });

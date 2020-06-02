@@ -132,6 +132,15 @@ class CharType : public IntegerBaseType {
                                        Context* context) override;
 };
 
+class ShortType : public IntegerBaseType {
+  public:
+    ShortType();
+    virtual Value CreateBinaryOperation(BinaryOperator op, Value v0, Value v1,
+                                        Context* context) override;
+    virtual Value CreateUnaryOperation(UnaryOperator op, Value v,
+                                       Context* context) override;
+};
+
 class IntegerType : public IntegerBaseType {
   public:
     IntegerType();

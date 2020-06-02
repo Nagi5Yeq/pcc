@@ -11,7 +11,8 @@ class StatementListNode : public BaseNode {
   public:
     StatementListNode(Context* context);
     void Append(std::shared_ptr<BaseNode> child);
-    virtual Value CodeGen();
+    virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   private:
     std::list<std::shared_ptr<BaseNode>> childs_;
@@ -21,6 +22,7 @@ class EmptyStatementNode : public BaseNode {
   public:
     EmptyStatementNode(Context* context);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 };
 
 class AssignStatementNode : public BaseNode {
@@ -28,6 +30,7 @@ class AssignStatementNode : public BaseNode {
     AssignStatementNode(Context* context, std::shared_ptr<ExprNode> lhs,
                         std::shared_ptr<ExprNode> rhs);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::shared_ptr<ExprNode> lhs_;
@@ -40,6 +43,7 @@ class IfStatementNode : public BaseNode {
                     std::shared_ptr<BaseNode> ThenPart,
                     std::shared_ptr<BaseNode> ElsePart);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::shared_ptr<ExprNode> expr_;
@@ -52,6 +56,7 @@ class WhileStatementNode : public BaseNode {
     WhileStatementNode(Context* context, std::shared_ptr<ExprNode> expr,
                        std::shared_ptr<BaseNode> WhileBody);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::shared_ptr<ExprNode> expr_;
@@ -63,6 +68,7 @@ class RepeatStatementNode : public BaseNode {
     RepeatStatementNode(Context* context, std::shared_ptr<ExprNode> expr,
                         std::shared_ptr<BaseNode> RepeatBody);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::shared_ptr<ExprNode> expr_;
@@ -76,6 +82,7 @@ class ForStatementNode : public BaseNode {
                      std::shared_ptr<ExprNode> end, bool IsUpward,
                      std::shared_ptr<BaseNode> ForBody);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 
   protected:
     std::shared_ptr<ExprNode> variable_;
@@ -89,12 +96,14 @@ class BreakStatementNode : public BaseNode {
   public:
     BreakStatementNode(Context* context);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 };
 
 class ContinueStatementNode : public BaseNode {
   public:
     ContinueStatementNode(Context* context);
     virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
 };
 } // namespace pcc
 

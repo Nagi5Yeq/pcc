@@ -24,11 +24,17 @@ list(APPEND PCC_SOURCE
     node/ExprNode.cc
     node/FunctionNode.cc
     node/LiteralNode.cc
+    node/Node.cc
     node/StatementNode.cc)
+
+list(APPEND PCC_SOURCE
+    traveler/AsciiTraveler.cc
+    traveler/Traveler.cc)
 
 set(PCC_INCLUDE
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/node
+    ${CMAKE_SOURCE_DIR}/traveler
     ${CMAKE_CURRENT_BINARY_DIR})
 
 if(WIN32)

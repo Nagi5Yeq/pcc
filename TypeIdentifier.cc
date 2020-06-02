@@ -56,19 +56,20 @@ std::shared_ptr<Type> ArrayTypeIdentifier::GetType() {
 }
 
 RecordTypeIdentifier::RecordTypeIdentifier(Context* context,
-                                   std::list<Declaration>&& members)
+                                           std::list<Declaration>&& members)
     : TypeIdentifier(context)
     , members_(std::move(members)) {}
 
 std::shared_ptr<Type> RecordTypeIdentifier::GetType() {
     if (type_ == nullptr) {
-        std::vector<RecordMember> MemberTypes(members_.size());
-        std::transform(members_.cbegin(), members_.cend(), MemberTypes.begin(),
-                       [](const Declaration& member) {
-                           return std::make_pair(
-                               std::get<0>(member),
-                               std::get<1>(member)->GetType());
-                       });
+        std::vector<RecordMember> MemberTypes;
+        MemberTypes.reserve(members_.size());
+        std::transform(
+            members_.cbegin(), members_.cend(), std::back_inserter(MemberTypes),
+            [](const Declaration& member) {
+                return std::make_pair(std::get<0>(member),
+                                      std::get<1>(member)->GetType());
+            });
         type_ = context_->GetTypeManager()->CreateRecordType(MemberTypes);
     }
     return type_;

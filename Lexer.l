@@ -118,6 +118,7 @@ comment         {comment1}|{comment2}|{comment3}
 "void"      {return Parser::make_VOID(loc);}
 "boolean"   {return Parser::make_BOOLEAN(loc);}
 "char"      {return Parser::make_CHAR(loc);}
+"short"     {return Parser::make_SHORT(loc);}
 "integer"   {return Parser::make_INTEGER(loc);}
 "int64"     {return Parser::make_INT64(loc);}
 "real"      {return Parser::make_REAL(loc);}
