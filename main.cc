@@ -87,9 +87,8 @@ int main(int argc, char* argv[]) {
     std::string features = "";
     llvm::TargetOptions options;
     llvm::TargetMachine* machine =
-        target->createTargetMachine(triple, cpu, features, options, llvm::None);
-    target->createTargetMachine(triple, cpu, features, options, llvm::None,
-                                llvm::None, optimization[OptLevel]);
+        target->createTargetMachine(triple, cpu, features, options, llvm::None,
+                                    llvm::None, optimization[OptLevel]);
     llvm::DataLayout layout = machine->createDataLayout();
 
     if (optind >= argc) {
