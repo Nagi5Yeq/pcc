@@ -13,7 +13,6 @@ class AsciiTraveler : public Traveler {
     virtual Traveler& operator<<(TravelPart part);
 
   protected:
-    int level_;
     std::string prefix_;
     std::stack<bool> IsLastChild_;
 

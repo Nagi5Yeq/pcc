@@ -161,7 +161,7 @@ int UnaryExprNode::Travel(Traveler& traveler) {
     traveler << TravelPart::NAME_BEGIN << "UnaryExprNode"
              << TravelPart::NAME_END;
     traveler << TravelPart::DESCRPTION_BEGIN << "op='" << GetOperatorName(op_)
-             << " ResultType='" << type_ << TravelPart::DESCRPTION_END;
+             << "' ResultType=" << type_ << TravelPart::DESCRPTION_END;
     traveler << TravelPart::LAST_CHILD_BEGIN;
     value_->Travel(traveler);
     traveler << TravelPart::LAST_CHILD_END << TravelPart::END;
@@ -293,7 +293,7 @@ int ExternNode::Travel(Traveler& traveler) {
     traveler << TravelPart::NAME_BEGIN << "ExternNode" << TravelPart::NAME_END;
     traveler << TravelPart::DESCRPTION_BEGIN << "FunctionName=" << name_
              << " ReturnType=" << ReturnTypeIdentifier_
-             << (IsVariadic_ ? "Variadic" : "") << TravelPart::DESCRPTION_END;
+             << (IsVariadic_ ? " variadic" : "") << TravelPart::DESCRPTION_END;
     TerminalContainerTravel(
         traveler,
         [](Traveler& traveler, auto& arg) {
