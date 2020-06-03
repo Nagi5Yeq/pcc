@@ -19,9 +19,13 @@ enum class TravelPart {
     LAST_CHILD_END,
     END
 };
+
+class BaseNode;
+
 class Traveler {
   public:
     Traveler(std::ostream& out);
+    void Travel(std::shared_ptr<BaseNode> root);
     virtual Traveler& operator<<(TravelPart part) = 0;
     Traveler& operator<<(std::shared_ptr<Type> type);
     Traveler& operator<<(std::shared_ptr<TypeIdentifier> identifier);
@@ -33,6 +37,8 @@ class Traveler {
     }
 
   protected:
+    virtual void PreTravel();
+    virtual void PostTravel();
     std::ostream& out_;
 };
 } // namespace pcc

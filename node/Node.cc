@@ -191,7 +191,6 @@ int PointerAccessNode::Travel(Traveler& traveler) {
     traveler << TravelPart::CHILD_END << TravelPart::LAST_CHILD_BEGIN;
     rhs_->Travel(traveler);
     traveler << TravelPart::LAST_CHILD_END << TravelPart::END;
-    traveler << TravelPart::END;
     return 0;
 }
 
@@ -206,7 +205,6 @@ int ArrayAccessNode::Travel(Traveler& traveler) {
     traveler << TravelPart::CHILD_END << TravelPart::LAST_CHILD_BEGIN;
     rhs_->Travel(traveler);
     traveler << TravelPart::LAST_CHILD_END << TravelPart::END;
-    traveler << TravelPart::END;
     return 0;
 }
 
@@ -368,7 +366,7 @@ int StringLiteralNode::Travel(Traveler& traveler) {
         if (std::isprint(c)) {
             escaped.push_back(c);
         } else {
-            auto hex = {'\\', 'x', HexChars[c & 0xf], HexChars[(c >> 4) & 0xf]};
+            auto hex = {'\\', 'x', HexChars[(c >> 4) & 0xf], HexChars[c & 0xf]};
             escaped.append(hex);
         }
     }

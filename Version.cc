@@ -40,7 +40,8 @@ PCC_NORETURN void ShowHelp() {
                  "    -o <output>   Specify output file name.\n"
                  "    -O <0,1,2,3>  Specify optimization level.\n"
                  "\n"
-                 "    -a            Also dump the AST."
+                 "    -a            Dump the AST.\n"
+                 "    -d            Generate a dot file for AST."
               << std::endl;
     std::exit(0);
 }

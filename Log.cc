@@ -16,7 +16,7 @@ void Log(LogLevel level, const char* format, ...) {
             std::cerr << Color::RED << "error: ";
             break;
         case PCC_WARNING:
-            std::cerr << Color::YELLOW << "warning: ";
+            std::cerr << Color::MAGENTA << "warning: ";
             break;
         case PCC_INFO:
             std::cerr << Color::CYAN << "info: ";

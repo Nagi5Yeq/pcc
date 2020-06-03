@@ -29,6 +29,7 @@ list(APPEND PCC_SOURCE
 
 list(APPEND PCC_SOURCE
     traveler/AsciiTraveler.cc
+    traveler/DotTraveler.cc
     traveler/Traveler.cc)
 
 set(PCC_INCLUDE

@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 
 #ifdef _MSC_VER
@@ -6,13 +7,16 @@
 #include <unistd.h>
 #endif
 
+#include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
+#include <llvm/Transforms/Scalar.h>
 
 #include "AsciiTraveler.hh"
+#include "DotTraveler.hh"
 #include "Driver.hh"
 #include "Log.hh"
 #include "Version.hh"
@@ -26,10 +30,10 @@ int main(int argc, char* argv[]) {
     std::string OutputFileName;
     enum { IR, ASSEMBLY, OBJECT } CompileType = IR;
     int OptLevel = 2;
-    bool AsciiTravel = false;
+    bool AsciiTravel = false, DotTravel = false;
 
     pcc::SetExecutableName(argv[0]);
-    while ((rv = getopt(argc, argv, "vVhiScao:O:")) != -1) {
+    while ((rv = getopt(argc, argv, "vVhiScado:O:")) != -1) {
         switch (rv) {
         case 'v':
             level = (level == 0 ? 0 : level - 1);
@@ -49,6 +53,9 @@ int main(int argc, char* argv[]) {
             break;
         case 'a':
             AsciiTravel = true;
+            break;
+        case 'd':
+            DotTravel = true;
             break;
         case 'o':
             OutputFileName = optarg;
@@ -132,19 +139,29 @@ int main(int argc, char* argv[]) {
         }
         std::error_code ErrorCode;
         llvm::raw_fd_ostream output(OutputFileName, ErrorCode);
+        llvm::legacy::PassManager manager;
+        manager.add(llvm::createCFGSimplificationPass());
+        manager.add(llvm::createMergedLoadStoreMotionPass());
+        manager.add(llvm::createReassociatePass());
+        manager.add(llvm::createLoopSimplifyCFGPass());
         switch (CompileType) {
         case IR:
-            module->print(output, nullptr);
+            manager.add(llvm::createPrintModulePass(output));
             break;
         case ASSEMBLY:
-            compile(module, output, llvm::CGFT_AssemblyFile, machine);
+            machine->addPassesToEmitFile(
+                manager, output, nullptr,
+                llvm::CodeGenFileType::CGFT_AssemblyFile);
             break;
         case OBJECT:
-            compile(module, output, llvm::CGFT_ObjectFile, machine);
+            machine->addPassesToEmitFile(
+                manager, output, nullptr,
+                llvm::CodeGenFileType::CGFT_ObjectFile);
             break;
         default:
             break;
         }
+        manager.run(*module);
         pcc::Log(pcc::PCC_INFO, "%s compiled to %s", argv[i],
                  OutputFileName.c_str());
         OutputFileName.clear();
@@ -152,15 +169,25 @@ int main(int argc, char* argv[]) {
             pcc::Log(pcc::PCC_INFO, "dumping abstract syntax tree of %s",
                      argv[i]);
             pcc::AsciiTraveler traveler(std::cerr);
-            root->Travel(traveler);
+            traveler.Travel(root);
+        }
+        if (DotTravel == true) {
+            std::string DotOutputName;
+            size_t PostfixPos = filename.rfind(".pas");
+            if (PostfixPos == std::string::npos) {
+                DotOutputName = filename + ".dot";
+            } else {
+                DotOutputName = filename.substr(0, PostfixPos) + ".dot";
+            }
+            std::ofstream DotOut(DotOutputName);
+            if (DotOut.is_open() == false) {
+                pcc::Log(pcc::PCC_ERROR, "failed to open dot outpt file %s",
+                         DotOutputName.c_str());
+            }
+            pcc::DotTraveler traveler(DotOut);
+            traveler.Travel(root);
+            DotOut.close();
         }
     }
     return 0;
-}
-
-void compile(llvm::Module* module, llvm::raw_pwrite_stream& output,
-             llvm::CodeGenFileType type, llvm::TargetMachine* machine) {
-    llvm::legacy::PassManager manager;
-    machine->addPassesToEmitFile(manager, output, nullptr, type);
-    manager.run(*module);
 }
