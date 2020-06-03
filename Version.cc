@@ -27,7 +27,7 @@ PCC_NORETURN void ShowVersion() {
 PCC_NORETURN void ShowHelp() {
     std::cerr << PCC_NAME " version " PCC_VERSION_STRING "\n"
               << "Usage: " << GetExecutableName()
-              << " [-vVhiSc] [-O <0,1,2,3>] [-o <output>] "
+              << " [-vVhiScad] [-O <0,1,2,3>] [-o <output>] "
                  "file...\n"
                  "    -v            Verbose mode.\n"
                  "    -vv           Very verbose mode.\n"
