@@ -31,8 +31,8 @@ class Traveler {
     Traveler& operator<<(std::shared_ptr<TypeIdentifier> identifier);
 
     template <typename T>
-    Traveler& operator<<(T value) {
-        out_ << value;
+    Traveler& operator<<(T&& value) {
+        out_ << std::forward<T>(value);
         return *this;
     }
 

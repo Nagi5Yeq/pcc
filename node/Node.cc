@@ -501,4 +501,45 @@ int ContinueStatementNode::Travel(Traveler& traveler) {
     traveler << TravelPart::END;
     return 0;
 }
+
+int SwitchStatementNode::Travel(Traveler& traveler) {
+    traveler << TravelPart::PREFIX;
+    traveler << TravelPart::NAME_BEGIN << "SwitchStatementNode"
+             << TravelPart::NAME_END;
+    traveler << TravelPart::DESCRPTION_BEGIN << "NumCases="
+             << CasePairs_.size() + (DefaultAction_ == nullptr ? 0 : 1)
+             << (DefaultAction_ == nullptr ? "" : " HasDefault")
+             << TravelPart::DESCRPTION_END;
+    traveler << TravelPart::CHILD_BEGIN;
+    CaseVariable_->Travel(traveler);
+    traveler << TravelPart::CHILD_END;
+    std::shared_ptr<BaseNode> PrevAction = nullptr;
+    std::vector<std::shared_ptr<BaseNode>> actions;
+    for (auto&& child : CasePairs_) {
+        std::shared_ptr<BaseNode> action = std::get<1>(child);
+        if (action != PrevAction) {
+            actions.push_back(action);
+            PrevAction = action;
+        }
+    }
+    auto lambda = [](Traveler& traveler, auto&& action) {
+        action->Travel(traveler);
+    };
+    NonterminalContainerTravel(
+        traveler,
+        [](Traveler& traveler, auto&& child) {
+            std::get<0>(child)->Travel(traveler);
+        },
+        CasePairs_);
+    if (DefaultAction_ == nullptr) {
+        TerminalContainerTravel(traveler, lambda, actions);
+    } else {
+        NonterminalContainerTravel(traveler, lambda, actions);
+        traveler << TravelPart::LAST_CHILD_BEGIN;
+        DefaultAction_->Travel(traveler);
+        traveler << TravelPart::LAST_CHILD_END;
+    }
+    traveler << TravelPart::END;
+    return 0;
+}
 } // namespace pcc

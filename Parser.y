@@ -44,7 +44,7 @@ YY_DECL;
 %token FILE_END 0;
 %token COLON SEMICOLON COMMA DOTDOT DOT ASSIGN LBRACKET RBRACKET LPARENTHESIS RPARENTHESIS
 %token PROGRAM IDENTIFIER VAR CONST TYPE BEGINS ENDS FUNCTION EXTERN DOTDOTDOT
-%token IF THEN ELSE WHILE DO REPEAT UNTIL BREAK CONTINUE FOR TO
+%token IF THEN ELSE WHILE DO REPEAT UNTIL BREAK CONTINUE FOR TO CASE
 %token VOID BOOLEAN CHAR SHORT INTEGER INT64 REAL STRING ARRAY OF RECORD
 %token ADD SUB MUL REAL_DIV DIV MOD LT LE GT GE EQ NE CARET AT
 %token AND NOT OR XOR SHL SHR
@@ -85,6 +85,9 @@ YY_DECL;
 %type <std::shared_ptr<pcc::BaseNode>> statement open_statement closed_statement normal_statement
 %type <std::shared_ptr<pcc::AssignStatementNode>> assign_statement
 %type <std::shared_ptr<pcc::RepeatStatementNode>> repeat_statement
+%type <std::shared_ptr<pcc::SwitchStatementNode>> switch_statement
+%type <std::list<pcc::CasePair>> case_statements
+%type <std::list<std::shared_ptr<pcc::ExprNode>>> cases
 
 %%
 
@@ -121,8 +124,8 @@ var_decl_statement
     ;
 
 var_decls
-    : var_decls SEMICOLON var_decl  {$$=std::move($1); auto NewChilds=std::get<0>($3); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($3)});}}
-    | var_decl                      {auto NewChilds=std::get<0>($1); for(auto& name: NewChilds){$$.push_back({name, std::get<1>($1)});}}
+    : var_decls SEMICOLON var_decl  {$$=std::move($1); auto NewChilds=std::get<0>($3); for(auto&& name: NewChilds){$$.push_back({name, std::get<1>($3)});}}
+    | var_decl                      {auto NewChilds=std::get<0>($1); for(auto&& name: NewChilds){$$.push_back({name, std::get<1>($1)});}}
     ;
 
 var_decl
@@ -232,6 +235,7 @@ normal_statement
     : statement_block   {$$=$1;}
     | assign_statement  {$$=$1;}
     | repeat_statement  {$$=$1;}
+    | switch_statement  {$$=$1;}
     | expression        {$$=$1;}
     | BREAK             {$$=std::make_shared<pcc::BreakStatementNode>(ctx);}
     | CONTINUE          {$$=std::make_shared<pcc::ContinueStatementNode>(ctx);}
@@ -248,6 +252,21 @@ assign_statement
 
 repeat_statement
     : REPEAT statement UNTIL expression {$$=std::make_shared<pcc::RepeatStatementNode>(ctx, $4, $2);}
+    ;
+
+switch_statement
+    : CASE expression OF case_statements ENDS                           {$$=std::make_shared<SwitchStatementNode>(ctx, $2, std::move($4), nullptr);}
+    | CASE expression OF case_statements ELSE statement SEMICOLON ENDS  {$$=std::make_shared<SwitchStatementNode>(ctx, $2, std::move($4), $6);}
+    ;
+
+case_statements
+    : case_statements cases COLON statement SEMICOLON   {$$=std::move($1); for(auto&& child:$2){$$.push_back({child, $4});}}
+    | cases COLON statement SEMICOLON                   {for(auto&& child:$1){$$.push_back({child, $3});}}
+    ;
+
+cases
+    : cases COMMA literal   {$$=std::move($1); $$.push_back($3);}
+    | literal               {$$.push_back($1);}
     ;
 
 /* ==================[expression part]================== */

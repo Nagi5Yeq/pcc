@@ -112,6 +112,7 @@ comment         {comment1}|{comment2}|{comment3}
 "for"       {return Parser::make_FOR(loc);}
 "to"        {return Parser::make_TO(true, loc);}
 "downto"    {return Parser::make_TO(false, loc);}
+"case"      {return Parser::make_CASE(loc);}
 "break"     {return Parser::make_BREAK(loc);}
 "continue"  {return Parser::make_CONTINUE(loc);}
 
@@ -167,7 +168,15 @@ comment         {comment1}|{comment2}|{comment3}
 {white}+ {loc.step();}
 \n+      {loc.lines(yyleng); loc.step();}
 
-{comment} {}
+{comment} {
+    int i;
+    for(i=0; i<yyleng; i++){
+        if(yytext[i]=='\n'){
+            loc.lines(1);
+            loc.step();
+        }
+    }
+}
 
 . {
     pcc::Log(pcc::PCC_ERROR, "unrecognized token \"%s\"", yytext);

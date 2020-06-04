@@ -230,3 +230,19 @@ begin
     pa^.m4[1].m1[2]:=1234;
     record_test:=a.m3[6]+pa^.m3[a.m1]+a.m4[1].m1[2];
 end;
+
+function case_test(a:integer):integer;
+begin
+    case a of
+    1,2,3:case_test:=111;
+    4,5,6:case a of
+            4:case_test:=222;
+            5,6:case a of
+                5:case_test:=333;
+                6:case_test:=555;
+            end;
+        end;
+    else
+        case_test:=666;
+    end
+end;

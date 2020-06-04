@@ -105,6 +105,24 @@ class ContinueStatementNode : public BaseNode {
     virtual Value CodeGen() override;
     virtual int Travel(Traveler& traveler) override;
 };
+
+using CasePair =
+    std::pair<std::shared_ptr<ExprNode>, std::shared_ptr<BaseNode>>;
+
+class SwitchStatementNode : public BaseNode {
+  public:
+    SwitchStatementNode(Context* context,
+                        std::shared_ptr<ExprNode> CaseVariable,
+                        std::list<CasePair>&& CasePairs,
+                        std::shared_ptr<BaseNode> DefaultAction);
+    virtual Value CodeGen() override;
+    virtual int Travel(Traveler& traveler) override;
+
+  protected:
+    std::shared_ptr<ExprNode> CaseVariable_;
+    std::list<CasePair> CasePairs_;
+    std::shared_ptr<BaseNode> DefaultAction_;
+};
 } // namespace pcc
 
 #endif

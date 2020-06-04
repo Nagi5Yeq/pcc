@@ -294,4 +294,74 @@ Value ContinueStatementNode::CodeGen() {
     context_->SetJumpingFlag(true);
     return nullptr;
 }
+
+SwitchStatementNode::SwitchStatementNode(
+    Context* context, std::shared_ptr<ExprNode> CaseVariable,
+    std::list<CasePair>&& CasePairs, std::shared_ptr<BaseNode> DefaultAction)
+    : BaseNode(context)
+    , CaseVariable_(CaseVariable)
+    , CasePairs_(std::move(CasePairs))
+    , DefaultAction_(DefaultAction) {}
+
+Value SwitchStatementNode::CodeGen() {
+    llvm::IRBuilder<>* builder = context_->GetBuilder();
+    Value SwitchValue = CaseVariable_->CodeGen();
+    std::shared_ptr<IntegerBaseType> type =
+        std::dynamic_pointer_cast<IntegerBaseType>(CaseVariable_->GetType());
+    if (type == nullptr) {
+        Log(LogLevel::PCC_ERROR,
+            "variable of switch statement variable should have a integer-like "
+            "type, not %s",
+            CaseVariable_->GetType()->GetCommonName());
+        return nullptr;
+    }
+    llvm::Function* body = builder->GetInsertBlock()->getParent();
+    llvm::BasicBlock* EndBlock =
+        llvm::BasicBlock::Create(GlobalLLVMContext, "done");
+    llvm::BasicBlock* DefaultBlock =
+        (DefaultAction_ == nullptr
+             ? EndBlock
+             : llvm::BasicBlock::Create(GlobalLLVMContext, "default"));
+    llvm::SwitchInst* inst =
+        builder->CreateSwitch(SwitchValue, DefaultBlock, CasePairs_.size() + 1);
+    std::shared_ptr<BaseNode> PrevAcion = nullptr;
+    llvm::BasicBlock* PrevBlock = nullptr;
+    for (auto&& CaseChild : CasePairs_) {
+        llvm::Value* CaseValue = std::get<0>(CaseChild)->CodeGen();
+        std::shared_ptr<IntegerBaseType> CaseType =
+            std::dynamic_pointer_cast<IntegerBaseType>(
+                std::get<0>(CaseChild)->GetType());
+        if (CaseType == nullptr) {
+            Log(LogLevel::PCC_ERROR,
+                "case of switch statement variable should have a "
+                "integer-like "
+                "type, not %s",
+                std::get<0>(CaseChild)->GetType()->GetCommonName());
+            return nullptr;
+        }
+        CaseValue = builder->CreateSExtOrTrunc(CaseValue, type->GetLLVMType());
+        llvm::ConstantInt* CaseConst = llvm::cast<llvm::ConstantInt>(CaseValue);
+        std::shared_ptr<BaseNode> CaseAction = std::get<1>(CaseChild);
+        if (CaseAction == PrevAcion) {
+            inst->addCase(CaseConst, PrevBlock);
+        } else {
+            llvm::BasicBlock* CaseBlock =
+                llvm::BasicBlock::Create(GlobalLLVMContext, "case", body);
+            inst->addCase(CaseConst, CaseBlock);
+            builder->SetInsertPoint(CaseBlock);
+            CaseAction->CodeGen();
+            builder->CreateBr(EndBlock);
+            PrevAcion = CaseAction, PrevBlock = CaseBlock;
+        }
+    }
+    if (DefaultAction_ != nullptr) {
+        body->getBasicBlockList().push_back(DefaultBlock);
+        builder->SetInsertPoint(DefaultBlock);
+        DefaultAction_->CodeGen();
+        builder->CreateBr(EndBlock);
+    }
+    body->getBasicBlockList().push_back(EndBlock);
+    builder->SetInsertPoint(EndBlock);
+    return nullptr;
+}
 } // namespace pcc
