@@ -290,6 +290,7 @@ l3_expression
     : l4_operator l3_expression             {$$=std::make_shared<pcc::UnaryExprNode>(ctx,$1,$2);}
     | AT lvalue                             {$$=$2;}
     | standalone                            {$$=$1;}
+    ;
 
 standalone
     : rvalue                                {$$=$1;}
