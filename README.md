@@ -55,7 +55,7 @@ Then you need to link the object file qsort.o by your host-compiler.
 
 See ssl.pas and extern.pas.
 
-For the `scanf` case, the `scanf` may be a marco in C like `__isoc99_scanf`, so you may need to wrap the scanf function, see common.pas.
+For the `scanf` case, the `scanf` may be a marco in C like `__isoc99_scanf`, so you may need to wrap the scanf function, see common.c.
 
 #### calling pascal functions from C
 

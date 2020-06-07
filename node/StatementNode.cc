@@ -324,7 +324,7 @@ Value SwitchStatementNode::CodeGen() {
              : llvm::BasicBlock::Create(GlobalLLVMContext, "default"));
     llvm::SwitchInst* inst =
         builder->CreateSwitch(SwitchValue, DefaultBlock, CasePairs_.size() + 1);
-    std::shared_ptr<BaseNode> PrevAcion = nullptr;
+    std::shared_ptr<BaseNode> PrevAction = nullptr;
     llvm::BasicBlock* PrevBlock = nullptr;
     for (auto&& CaseChild : CasePairs_) {
         llvm::Value* CaseValue = std::get<0>(CaseChild)->CodeGen();
@@ -342,7 +342,7 @@ Value SwitchStatementNode::CodeGen() {
         CaseValue = builder->CreateSExtOrTrunc(CaseValue, type->GetLLVMType());
         llvm::ConstantInt* CaseConst = llvm::cast<llvm::ConstantInt>(CaseValue);
         std::shared_ptr<BaseNode> CaseAction = std::get<1>(CaseChild);
-        if (CaseAction == PrevAcion) {
+        if (CaseAction == PrevAction) {
             inst->addCase(CaseConst, PrevBlock);
         } else {
             llvm::BasicBlock* CaseBlock =
@@ -351,7 +351,7 @@ Value SwitchStatementNode::CodeGen() {
             builder->SetInsertPoint(CaseBlock);
             CaseAction->CodeGen();
             builder->CreateBr(EndBlock);
-            PrevAcion = CaseAction, PrevBlock = CaseBlock;
+            PrevAction = CaseAction, PrevBlock = CaseBlock;
         }
     }
     if (DefaultAction_ != nullptr) {
