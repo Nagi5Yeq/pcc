@@ -215,6 +215,7 @@ statements
 statement
     : open_statement                    {$$=$1;}
     | closed_statement                  {$$=$1;}
+    | error                             {$$=std::make_shared<pcc::EmptyStatementNode>(ctx);}
     ;
 
 open_statement
